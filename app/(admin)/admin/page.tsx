@@ -35,7 +35,14 @@ type CompletedTrip = Service & {
   ratings?: Array<{ from_user_id: string; stars: number; comment: string | null }>;
 };
 
-type Tab = "pending" | "ongoing" | "completed";
+type CancelledTrip = Service & {
+  vehicle?: Vehicle;
+  rider?: Profile;
+  driver?: Profile;
+  ratings?: Array<{ from_user_id: string; stars: number; comment: string | null }>;
+};
+
+type Tab = "pending" | "ongoing" | "completed" | "cancelled";
 
 export default function OperatorRequestsPage() {
   const router = useRouter();
@@ -43,10 +50,12 @@ export default function OperatorRequestsPage() {
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [ongoingTrips, setOngoingTrips] = useState<OngoingTrip[]>([]);
   const [completedTrips, setCompletedTrips] = useState<CompletedTrip[]>([]);
+  const [cancelledTrips, setCancelledTrips] = useState<CancelledTrip[]>([]);
   const [drivers, setDrivers] = useState<EnrichedDriver[]>([]);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedOngoingId, setSelectedOngoingId] = useState<string | null>(null);
   const [selectedCompletedId, setSelectedCompletedId] = useState<string | null>(null);
+  const [selectedCancelledId, setSelectedCancelledId] = useState<string | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
@@ -68,6 +77,7 @@ export default function OperatorRequestsPage() {
         setRequests(data.requests || []);
         setOngoingTrips(data.ongoingTrips || []);
         setCompletedTrips(data.completedTrips || []);
+        setCancelledTrips(data.cancelledTrips || []);
         setDrivers(data.drivers || []);
       }
     } catch (err) {
@@ -109,6 +119,7 @@ export default function OperatorRequestsPage() {
   const selectedRequest = requests.find((r) => r.id === selectedRequestId);
   const selectedOngoing = ongoingTrips.find((r) => r.id === selectedOngoingId);
   const selectedCompleted = completedTrips.find((r) => r.id === selectedCompletedId);
+  const selectedCancelled = cancelledTrips.find((r) => r.id === selectedCancelledId);
   const availableDrivers = drivers.filter(
     (d) => d.availability === "online" && !d.is_busy
   );
@@ -265,6 +276,25 @@ export default function OperatorRequestsPage() {
     }
   };
 
+  // Helper to calculate trip duration in minutes
+  const getTripDuration = (startedAt: string, endedAt: string | null) => {
+    if (!endedAt) return null;
+    const start = new Date(startedAt).getTime();
+    const end = new Date(endedAt).getTime();
+    const diffMs = end - start;
+    const diffMins = Math.round(diffMs / (1000 * 60));
+    return diffMins;
+  };
+
+  // Format duration as "X min" or "X h Y min"
+  const formatDuration = (minutes: number | null) => {
+    if (minutes === null || minutes < 0) return "—";
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours} h ${mins} min` : `${hours} h`;
+  };
+
   // Render functions for each tab
   const renderPendingRequest = (req: PendingRequest) => (
     <div
@@ -401,6 +431,7 @@ export default function OperatorRequestsPage() {
     const driverRating = trip.ratings?.find(
       (r) => r.from_user_id === trip.driver_id
     );
+    const duration = getTripDuration(trip.requested_at, trip.completed_at);
 
     return (
       <div
@@ -451,6 +482,11 @@ export default function OperatorRequestsPage() {
                 👨‍✈️ Conductor: {trip.driver.full_name}
               </div>
             )}
+            {duration !== null && (
+              <div className="text-[11px] text-gray-500">
+                ⏱️ Duración: {formatDuration(duration)}
+              </div>
+            )}
           </div>
 
           <div className="flex sm:flex-col items-end justify-between sm:justify-center gap-2 shrink-0">
@@ -476,14 +512,104 @@ export default function OperatorRequestsPage() {
     );
   };
 
+  const renderCancelledTrip = (trip: CancelledTrip) => {
+    const riderRating = trip.ratings?.find(
+      (r) => r.from_user_id === trip.rider_id
+    );
+    const driverRating = trip.ratings?.find(
+      (r) => r.from_user_id === trip.driver_id
+    );
+    const duration = getTripDuration(trip.requested_at, trip.cancelled_at);
+
+    return (
+      <div
+        key={trip.id}
+        onClick={() => {
+          setSelectedCancelledId(trip.id);
+          setActionError(null);
+        }}
+        className="p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition cursor-pointer"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-extrabold rounded-md uppercase">
+                {trip.cancelled_at
+                  ? new Date(trip.cancelled_at).toLocaleTimeString("es-AR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : new Date(trip.requested_at).toLocaleTimeString("es-AR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+              </span>
+              <span className="font-extrabold text-gray-900 text-sm truncate">
+                {trip.rider?.full_name || "Pasajero"}
+              </span>
+            </div>
+
+            <div className="text-xs text-gray-600 space-y-0.5">
+              <p className="truncate">
+                <span className="text-gray-400">📍 Origen:</span>{" "}
+                {trip.pickup_address}
+              </p>
+              <p className="truncate">
+                <span className="text-gray-400">🏁 Destino:</span>{" "}
+                {trip.destination_address}
+              </p>
+            </div>
+
+            {trip.vehicle && (
+              <div className="text-[11px] text-gray-500">
+                🚗 {trip.vehicle.make_model} ({trip.vehicle.license_plate}) • {trip.vehicle.color}
+              </div>
+            )}
+            {trip.driver && (
+              <div className="text-[11px] text-gray-500">
+                👨‍✈️ Conductor: {trip.driver.full_name}
+              </div>
+            )}
+            {duration !== null && (
+              <div className="text-[11px] text-gray-500">
+                ⏱️ Duración: {formatDuration(duration)}
+              </div>
+            )}
+          </div>
+
+          <div className="flex sm:flex-col items-end justify-between sm:justify-center gap-2 shrink-0">
+            <span className="text-rose-600 font-black text-sm">
+              {formatPrice(trip.final_price ?? trip.estimated_price ?? 0)}
+            </span>
+            {getStatusBadge(trip.status)}
+            <div className="flex items-center gap-1 text-[10px]">
+              {riderRating && (
+                <span className="text-amber-500" title="Calificación del pasajero">
+                  ★ {riderRating.stars}
+                </span>
+              )}
+              {driverRating && (
+                <span className="text-amber-500" title="Calificación del conductor">
+                  ★ {driverRating.stars}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderEmptyState = () => {
     switch (activeTab) {
       case "pending":
-        return "No hay solicitudes pendientes";
+        return "No hay viajes pendientes";
       case "ongoing":
         return "No hay viajes en curso";
       case "completed":
         return "No hay viajes finalizados";
+      case "cancelled":
+        return "No hay viajes cancelados";
     }
   };
 
@@ -495,6 +621,8 @@ export default function OperatorRequestsPage() {
         return "Los viajes asignados y en curso aparecerán aquí.";
       case "completed":
         return "Los viajes completados se mostrarán aquí.";
+      case "cancelled":
+        return "Los viajes cancelados se mostrarán aquí.";
     }
   };
 
@@ -545,17 +673,34 @@ export default function OperatorRequestsPage() {
             {completedTrips.map(renderCompletedTrip)}
           </div>
         );
+      case "cancelled":
+        if (cancelledTrips.length === 0) {
+          return (
+            <div className="text-center py-16 text-gray-400 space-y-2">
+              <span className="text-4xl block">✨</span>
+              <p className="text-sm font-semibold">{renderEmptyState()}</p>
+              <p className="text-xs">{renderEmptySubtext()}</p>
+            </div>
+          );
+        }
+        return (
+          <div className="divide-y divide-gray-100">
+            {cancelledTrips.map(renderCancelledTrip)}
+          </div>
+        );
     }
   };
 
   const renderTabTitle = () => {
     switch (activeTab) {
       case "pending":
-        return `Solicitudes por Asignar (${requests.length})`;
+        return `Viajes Pendientes (${requests.length})`;
       case "ongoing":
         return `Viajes en Curso (${ongoingTrips.length})`;
       case "completed":
         return `Viajes Finalizados (${completedTrips.length})`;
+      case "cancelled":
+        return `Viajes Cancelados (${cancelledTrips.length})`;
     }
   };
 
@@ -633,7 +778,7 @@ export default function OperatorRequestsPage() {
               : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          Solicitudes Pendientes ({requests.length})
+          Viajes Pendientes ({requests.length})
         </button>
         <button
           type="button"
@@ -656,6 +801,17 @@ export default function OperatorRequestsPage() {
           }`}
         >
           Viajes Finalizados ({completedTrips.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("cancelled")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+            activeTab === "cancelled"
+              ? "bg-white shadow-xs text-rose-600"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Viajes Cancelados ({cancelledTrips.length})
         </button>
       </div>
 
@@ -906,6 +1062,13 @@ export default function OperatorRequestsPage() {
                     </div>
                   )}
 
+                  {selectedCompleted.completed_at && (
+                    <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold text-xs">
+                      <span>Duración:</span>
+                      <span>{formatDuration(getTripDuration(selectedCompleted.requested_at, selectedCompleted.completed_at))}</span>
+                    </div>
+                  )}
+
                   {/* Ratings */}
                   {selectedCompleted.ratings && selectedCompleted.ratings.length > 0 && (
                     <div className="pt-2 border-t border-gray-200/60">
@@ -928,13 +1091,110 @@ export default function OperatorRequestsPage() {
                   ✅ Este viaje ha finalizado. Solo se pueden ver los detalles (solo lectura).
                 </div>
               </div>
+            ) : activeTab === "cancelled" && selectedCancelled ? (
+              <div className="space-y-5">
+                {/* Trip Overview - Read Only */}
+                <div className="p-4 bg-gray-50 rounded-2xl space-y-2 text-xs">
+                  <div>
+                    <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                      Pasajero
+                    </span>
+                    <span className="font-bold text-gray-900">
+                      {selectedCancelled.rider?.full_name}
+                    </span>
+                    {selectedCancelled.rider?.phone && (
+                      <span className="text-gray-600 block text-[11px]">
+                        {selectedCancelled.rider.phone}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-200/60">
+                    <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                      Vehículo del pasajero
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {selectedCancelled.vehicle?.make_model} ({selectedCancelled.vehicle?.license_plate})
+                    </span>
+                  </div>
+
+                  {selectedCancelled.driver && (
+                    <div className="pt-2 border-t border-gray-200/60">
+                      <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                        Conductor
+                      </span>
+                      <span className="font-semibold text-gray-800">
+                        {selectedCancelled.driver.full_name}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold">
+                    <span>Precio final:</span>
+                    <span className="text-rose-600">
+                      {formatPrice(selectedCancelled.final_price ?? selectedCancelled.estimated_price ?? 0)}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold text-xs">
+                    <span>Solicitado:</span>
+                    <span>{new Date(selectedCancelled.requested_at).toLocaleString("es-AR")}</span>
+                  </div>
+
+                  {selectedCancelled.cancelled_at && (
+                    <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold text-xs">
+                      <span>Cancelado:</span>
+                      <span>{new Date(selectedCancelled.cancelled_at).toLocaleString("es-AR")}</span>
+                    </div>
+                  )}
+
+                  {selectedCancelled.cancelled_at && (
+                    <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold text-xs">
+                      <span>Duración:</span>
+                      <span>{formatDuration(getTripDuration(selectedCancelled.requested_at, selectedCancelled.cancelled_at))}</span>
+                    </div>
+                  )}
+
+                  {selectedCancelled.cancellation_reason && (
+                    <div className="pt-2 border-t border-gray-200/60">
+                      <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                        Motivo de cancelación
+                      </span>
+                      <span className="text-rose-600 text-[11px]">{selectedCancelled.cancellation_reason}</span>
+                    </div>
+                  )}
+
+                  {/* Ratings */}
+                  {selectedCancelled.ratings && selectedCancelled.ratings.length > 0 && (
+                    <div className="pt-2 border-t border-gray-200/60">
+                      <span className="text-gray-400 block text-[10px] uppercase font-bold">
+                        Calificaciones
+                      </span>
+                      <div className="flex gap-4 mt-1 text-[11px]">
+                        {selectedCancelled.ratings.map((r) => (
+                          <span key={r.from_user_id} className="text-amber-500">
+                            {r.from_user_id === selectedCancelled.rider_id ? "Pasajero" : "Conductor"}:{" "}
+                            {"★".repeat(r.stars)} {r.comment && `(${r.comment})`}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
+                  ❌ Este viaje fue cancelado. Solo se pueden ver los detalles (solo lectura).
+                </div>
+              </div>
             ) : (
               <div className="text-center py-10 text-gray-400 text-xs">
                 {activeTab === "pending"
                   ? "Seleccioná una solicitud de la lista para ver los detalles y asignar un conductor."
                   : activeTab === "ongoing"
                   ? "Seleccioná un viaje en curso para ver los detalles."
-                  : "Seleccioná un viaje finalizado para ver los detalles (solo lectura)."}
+                  : activeTab === "completed"
+                  ? "Seleccioná un viaje finalizado para ver los detalles (solo lectura)."
+                  : "Seleccioná un viaje cancelado para ver los detalles (solo lectura)."}
               </div>
             )}
           </div>

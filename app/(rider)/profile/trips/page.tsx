@@ -76,6 +76,25 @@ export default function TripsHistoryPage() {
     }).format(amount);
   };
 
+  // Helper to calculate trip duration in minutes
+  const getTripDuration = (startedAt: string, endedAt: string | null) => {
+    if (!endedAt) return null;
+    const start = new Date(startedAt).getTime();
+    const end = new Date(endedAt).getTime();
+    const diffMs = end - start;
+    const diffMins = Math.round(diffMs / (1000 * 60));
+    return diffMins;
+  };
+
+  // Format duration as "X min" or "X h Y min"
+  const formatDuration = (minutes: number | null) => {
+    if (minutes === null || minutes < 0) return "—";
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours} h ${mins} min` : `${hours} h`;
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
@@ -230,6 +249,11 @@ export default function TripsHistoryPage() {
                             {trip.driver && (
                               <div className="text-[11px] text-gray-500 mt-0.5">
                                 Chofer: {trip.driver.full_name}
+                              </div>
+                            )}
+                            {(trip.status === "completed" || trip.status === "cancelled") && (
+                              <div className="text-[11px] text-gray-500 mt-0.5">
+                                ⏱️ Duración: {formatDuration(getTripDuration(trip.requested_at, trip.status === "completed" ? trip.completed_at : trip.cancelled_at))}
                               </div>
                             )}
                             {trip.cancellation_reason && (

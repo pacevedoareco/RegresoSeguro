@@ -85,7 +85,24 @@ export async function GET() {
     );
   }
 
-  // 4. Fetch available online drivers (online, active)
+  // 4. Fetch cancelled trips (status = cancelled)
+  const { data: cancelledTrips, error: cancelledError } = await (serviceClient as any)
+    .from("services")
+    .select(
+      "*, vehicle:vehicles(*), rider:profiles!services_rider_id_fkey(*), driver:profiles!services_driver_id_fkey(*), ratings(*)"
+    )
+    .eq("status", "cancelled")
+    .order("cancelled_at", { ascending: false });
+
+  if (cancelledError) {
+    console.error("[admin:requests] Error fetching cancelled trips:", cancelledError.message);
+    return NextResponse.json(
+      { code: "FETCH_ERROR", message: "Error al cargar viajes cancelados." },
+      { status: 500 }
+    );
+  }
+
+  // 5. Fetch available online drivers (online, active)
   const { data: drivers, error: driverError } = await (serviceClient as any)
     .from("driver_profiles")
     .select(
@@ -118,6 +135,7 @@ export async function GET() {
       requests: pendingRequests || [],
       ongoingTrips: ongoingTrips || [],
       completedTrips: completedTrips || [],
+      cancelledTrips: cancelledTrips || [],
       drivers: enrichedDrivers,
     },
     { status: 200 }
