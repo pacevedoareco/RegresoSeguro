@@ -69,7 +69,7 @@ export default function HomePage() {
       <header className="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🚗</span>
+            <img src="/icon.svg" alt="Regreso Seguro logo" className="w-8 h-8" />
             <span className="font-extrabold text-gray-900 tracking-tight text-lg">
               Regreso<span className="text-blue-600">Seguro</span>
             </span>
