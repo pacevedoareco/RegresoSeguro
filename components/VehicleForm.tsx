@@ -20,16 +20,35 @@ export function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
     setError(null);
     setIsLoading(true);
 
+    const trimmedPlate = licensePlate.trim().toUpperCase();
+    const trimmedMakeModel = makeModel.trim();
+    const trimmedColor = color.trim();
+
     try {
       const res = await fetch("/api/vehicles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          license_plate: licensePlate,
-          make_model: makeModel,
-          color,
+          license_plate: trimmedPlate,
+          make_model: trimmedMakeModel,
+          color: trimmedColor,
         }),
       });
+
+      if (res.status === 401) {
+        // Guest / Unauthenticated flow: Create local temporary vehicle
+        const tempVehicle: Vehicle = {
+          id: `temp-${Date.now()}`,
+          rider_id: "guest",
+          license_plate: trimmedPlate,
+          make_model: trimmedMakeModel,
+          color: trimmedColor,
+          is_active: true,
+          created_at: new Date().toISOString(),
+        };
+        onSuccess(tempVehicle);
+        return;
+      }
 
       const data = await res.json();
 
@@ -40,7 +59,17 @@ export function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
 
       onSuccess(data.vehicle);
     } catch {
-      setError("Error de red. Verificá tu conexión e intentá de nuevo.");
+      // If network fails or offline, provide temporary vehicle for guest mode
+      const tempVehicle: Vehicle = {
+        id: `temp-${Date.now()}`,
+        rider_id: "guest",
+        license_plate: trimmedPlate,
+        make_model: trimmedMakeModel,
+        color: trimmedColor,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      };
+      onSuccess(tempVehicle);
     } finally {
       setIsLoading(false);
     }

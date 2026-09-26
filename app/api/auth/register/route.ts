@@ -34,6 +34,20 @@ export async function POST(request: NextRequest) {
 
   const { email, password, full_name, registered_as_driver } = parsed.data;
 
+  // Validate presence of required service role configuration
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.error(
+      "[register] Missing environment variables: SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL is not set."
+    );
+    return NextResponse.json(
+      {
+        code: "SERVER_CONFIGURATION_ERROR",
+        message: "Error de configuración del servidor. Verificá las variables de entorno en producción.",
+      },
+      { status: 500 }
+    );
+  }
+
   // Use service client so we can set user metadata (full_name, registered_as_driver)
   const supabase = await createServiceClient();
 
@@ -44,7 +58,7 @@ export async function POST(request: NextRequest) {
       full_name,
       registered_as_driver,
     },
-    email_confirm: false, // We send our own confirmation email
+    email_confirm: true, // Auto-confirm email in Supabase so user can log in immediately
   });
 
   if (error) {

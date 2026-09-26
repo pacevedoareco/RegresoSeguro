@@ -32,6 +32,11 @@ export function VehicleSelector({
     e.stopPropagation();
     if (!confirm("¿Seguro que querés eliminar este vehículo?")) return;
 
+    if (vehicleId.startsWith("temp-")) {
+      onVehicleDeleted?.(vehicleId);
+      return;
+    }
+
     setDeletingId(vehicleId);
     try {
       const res = await fetch(`/api/vehicles/${vehicleId}`, {

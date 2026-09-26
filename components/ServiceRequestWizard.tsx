@@ -17,6 +17,8 @@ interface LocationState {
   lng: number;
 }
 
+const PENDING_REQUEST_KEY = "regreso_pending_service_request";
+
 export function ServiceRequestWizard() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // 1: Pickup, 2: Destination, 3: Vehicle, 4: Review
@@ -39,12 +41,67 @@ export function ServiceRequestWizard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   /* eslint-disable react-hooks/set-state-in-effect */
+  // Check for restored pending request after login/registration (FR-003)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(PENDING_REQUEST_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pickup && parsed.destination && parsed.vehicle) {
+          setPickup(parsed.pickup);
+          setDestination(parsed.destination);
+          
+          const vehicleData = parsed.vehicle;
+          // Check if vehicle was temporary
+          if (vehicleData.id?.startsWith("temp-")) {
+            // Attempt to persist vehicle to user account if now logged in
+            fetch("/api/vehicles", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                license_plate: vehicleData.license_plate,
+                make_model: vehicleData.make_model,
+                color: vehicleData.color,
+              }),
+            })
+              .then((res) => (res.ok ? res.json() : null))
+              .then((data) => {
+                const savedVehicle: Vehicle = data?.vehicle || vehicleData;
+                setVehicles([savedVehicle]);
+                setSelectedVehicleId(savedVehicle.id);
+                setStep(4);
+              })
+              .catch(() => {
+                setVehicles([vehicleData]);
+                setSelectedVehicleId(vehicleData.id);
+                setStep(4);
+              });
+          } else {
+            setVehicles([vehicleData]);
+            setSelectedVehicleId(vehicleData.id);
+            setStep(4);
+          }
+          // Clear pending request from session storage
+          sessionStorage.removeItem(PENDING_REQUEST_KEY);
+        }
+      }
+    } catch {
+      // Ignore sessionStorage parsing errors
+    }
+  }, []);
+
   // Load vehicles when entering step 3
   useEffect(() => {
     if (step === 3 && vehicles.length === 0) {
       setLoadingVehicles(true);
       fetch("/api/vehicles")
-        .then((res) => res.json())
+        .then((res) => {
+          if (res.status === 401) {
+            // Unauthenticated guest user
+            return { vehicles: [] };
+          }
+          return res.json();
+        })
         .then((data) => {
           const list: Vehicle[] = data.vehicles || [];
           setVehicles(list);
@@ -52,7 +109,9 @@ export function ServiceRequestWizard() {
             setSelectedVehicleId(list[0].id);
           }
         })
-        .catch(console.error)
+        .catch(() => {
+          setVehicles([]);
+        })
         .finally(() => setLoadingVehicles(false));
     }
   }, [step, vehicles.length, selectedVehicleId]);
@@ -168,6 +227,26 @@ export function ServiceRequestWizard() {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const vehicleObj = vehicles.find((v) => v.id === selectedVehicleId);
+
+    // If vehicle is temporary (guest mode), trigger lazy authentication gate (FR-003)
+    if (selectedVehicleId.startsWith("temp-")) {
+      try {
+        sessionStorage.setItem(
+          PENDING_REQUEST_KEY,
+          JSON.stringify({
+            pickup,
+            destination,
+            vehicle: vehicleObj,
+          })
+        );
+      } catch {
+        // Ignore storage errors
+      }
+      router.push("/auth/login?redirect=/");
+      return;
+    }
+
     try {
       const res = await fetch("/api/services", {
         method: "POST",
@@ -182,6 +261,24 @@ export function ServiceRequestWizard() {
           destination_lng: destination.lng,
         }),
       });
+
+      if (res.status === 401) {
+        // User session expired or unauthenticated — trigger FR-003 lazy auth gate
+        try {
+          sessionStorage.setItem(
+            PENDING_REQUEST_KEY,
+            JSON.stringify({
+              pickup,
+              destination,
+              vehicle: vehicleObj,
+            })
+          );
+        } catch {
+          // Ignore storage errors
+        }
+        router.push("/auth/login?redirect=/");
+        return;
+      }
 
       const data = await res.json();
 

@@ -1,12 +1,24 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
 const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@regresoseguro.com";
+
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  return new Resend(apiKey);
+}
 
 export async function sendRegistrationConfirmation(
   email: string,
   fullName: string
 ) {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[resend] RESEND_API_KEY not configured. Skipping confirmation email.");
+    return;
+  }
   await resend.emails.send({
     from: FROM,
     to: email,
@@ -20,6 +32,11 @@ export async function sendStrikeWarning(
   fullName: string,
   strikeCount: number
 ) {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[resend] RESEND_API_KEY not configured. Skipping strike warning email.");
+    return;
+  }
   await resend.emails.send({
     from: FROM,
     to: email,

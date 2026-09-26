@@ -17,12 +17,14 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+const BANNER_STORAGE_KEY = "regreso_push_banner_dismissed";
+
 export default function PushNotificationManager() {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [loading, setLoading] = useState(false);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(true); // default true until checked
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -33,7 +35,11 @@ export default function PushNotificationManager() {
       "Notification" in window
     ) {
       setIsSupported(true);
-      setPermission(Notification.permission);
+      const currentPerm = Notification.permission;
+      setPermission(currentPerm);
+
+      const isDismissed = localStorage.getItem(BANNER_STORAGE_KEY) === "true";
+      setBannerDismissed(isDismissed);
 
       // Check existing subscription
       void navigator.serviceWorker.ready.then(async (registration) => {
@@ -45,6 +51,15 @@ export default function PushNotificationManager() {
     }
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    try {
+      localStorage.setItem(BANNER_STORAGE_KEY, "true");
+    } catch {
+      // Ignore localStorage errors
+    }
+  };
 
   const subscribeToPush = async () => {
     setLoading(true);
@@ -64,6 +79,9 @@ export default function PushNotificationManager() {
         return;
       }
 
+      // Once permission is granted, dismiss the prompt
+      dismissBanner();
+
       const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
 
@@ -75,7 +93,7 @@ export default function PushNotificationManager() {
         });
       }
 
-      // Send subscription to server
+      // Send subscription to server (if user is authenticated, it will save)
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,8 +110,8 @@ export default function PushNotificationManager() {
     }
   };
 
-  // Do not render anything if push is not supported, or already granted and subscribed, or permission is denied, or dismissed
-  if (!isSupported || isSubscribed || permission === "denied" || bannerDismissed) {
+  // Do not render anything if push is not supported, or permission already granted/denied, or already subscribed, or dismissed
+  if (!isSupported || isSubscribed || permission === "granted" || permission === "denied" || bannerDismissed) {
     return null;
   }
 
@@ -114,7 +132,7 @@ export default function PushNotificationManager() {
           </div>
         </div>
         <button
-          onClick={() => setBannerDismissed(true)}
+          onClick={dismissBanner}
           className="text-gray-400 hover:text-gray-600 text-sm ml-2"
           aria-label="Cerrar aviso"
         >
@@ -123,7 +141,7 @@ export default function PushNotificationManager() {
       </div>
       <div className="mt-3 flex justify-end space-x-2">
         <button
-          onClick={() => setBannerDismissed(true)}
+          onClick={dismissBanner}
           className="px-3 py-1.5 text-xs text-gray-600 hover:bg-blue-100 rounded-md font-medium"
         >
           Ahora no
