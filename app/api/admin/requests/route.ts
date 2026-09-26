@@ -38,7 +38,7 @@ export async function GET() {
   const { data: pendingRequests, error: reqError } = await (serviceClient as any)
     .from("services")
     .select(
-      "*, vehicle:vehicles(*), rider:profiles!services_rider_id_fkey(*)"
+      "*, vehicle:vehicles(*), rider:profiles!services_rider_id_fkey(*), driver:profiles!services_driver_id_fkey(*)"
     )
     .eq("status", "requested")
     .order("requested_at", { ascending: true });
@@ -51,7 +51,41 @@ export async function GET() {
     );
   }
 
-  // 2. Fetch available online drivers (online, active)
+  // 2. Fetch ongoing trips (assigned, en_route, in_progress)
+  const { data: ongoingTrips, error: ongoingError } = await (serviceClient as any)
+    .from("services")
+    .select(
+      "*, vehicle:vehicles(*), rider:profiles!services_rider_id_fkey(*), driver:profiles!services_driver_id_fkey(*)"
+    )
+    .in("status", ["assigned", "en_route", "in_progress"])
+    .order("requested_at", { ascending: false });
+
+  if (ongoingError) {
+    console.error("[admin:requests] Error fetching ongoing trips:", ongoingError.message);
+    return NextResponse.json(
+      { code: "FETCH_ERROR", message: "Error al cargar viajes en curso." },
+      { status: 500 }
+    );
+  }
+
+  // 3. Fetch completed trips (status = completed)
+  const { data: completedTrips, error: completedError } = await (serviceClient as any)
+    .from("services")
+    .select(
+      "*, vehicle:vehicles(*), rider:profiles!services_rider_id_fkey(*), driver:profiles!services_driver_id_fkey(*), ratings(*)"
+    )
+    .eq("status", "completed")
+    .order("completed_at", { ascending: false });
+
+  if (completedError) {
+    console.error("[admin:requests] Error fetching completed trips:", completedError.message);
+    return NextResponse.json(
+      { code: "FETCH_ERROR", message: "Error al cargar viajes finalizados." },
+      { status: 500 }
+    );
+  }
+
+  // 4. Fetch available online drivers (online, active)
   const { data: drivers, error: driverError } = await (serviceClient as any)
     .from("driver_profiles")
     .select(
@@ -64,7 +98,7 @@ export async function GET() {
     console.error("[admin:drivers] Error fetching drivers:", driverError.message);
   }
 
-  // 3. Find which drivers have active assignments
+  // 5. Find which drivers have active assignments
   const { data: activeAssignments } = await (serviceClient as any)
     .from("services")
     .select("driver_id")
@@ -82,6 +116,8 @@ export async function GET() {
   return NextResponse.json(
     {
       requests: pendingRequests || [],
+      ongoingTrips: ongoingTrips || [],
+      completedTrips: completedTrips || [],
       drivers: enrichedDrivers,
     },
     { status: 200 }
