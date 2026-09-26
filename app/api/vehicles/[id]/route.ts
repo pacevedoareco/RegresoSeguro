@@ -27,7 +27,7 @@ export async function DELETE(
   }
 
   // Soft-delete the vehicle (set is_active = false)
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("vehicles")
     .update({ is_active: false })
     .eq("id", id)

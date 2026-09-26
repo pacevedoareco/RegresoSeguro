@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
   const { license_plate, make_model, color } = parsed.data;
 
   // Check if active vehicle with same plate exists for this rider
-  const { data: existingActive } = await supabase
+  const { data: existingActive } = await (supabase as any)
     .from("vehicles")
     .select("id, is_active")
     .eq("rider_id", user.id)
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       );
     } else {
       // Reactivate previously soft-deleted vehicle and update make_model and color
-      const { data: reactivated, error: updateError } = await supabase
+      const { data: reactivated, error: updateError } = await (supabase as any)
         .from("vehicles")
         .update({
           make_model,
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const { data: newVehicle, error: insertError } = await supabase
+  const { data: newVehicle, error: insertError } = await (supabase as any)
     .from("vehicles")
     .insert({
       rider_id: user.id,

@@ -34,7 +34,7 @@ export async function GET() {
   }
 
   // Find active service for this rider (requested, assigned, en_route, in_progress)
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("services")
     .select("*, vehicle:vehicles(*), driver:profiles!services_driver_id_fkey(*)")
     .eq("rider_id", user.id)
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 1. Check rider eligibility: suspended?
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from("profiles")
     .select("id, is_suspended, strikes")
     .eq("id", user.id)
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 2. BR-001: Check if rider already has an active service
-  const { data: existingActive } = await supabase
+  const { data: existingActive } = await (supabase as any)
     .from("services")
     .select("id, status")
     .eq("rider_id", user.id)
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       {
         code: "ACTIVE_SERVICE_EXISTS",
         message: "Ya tenés una solicitud o viaje activo en curso.",
-        serviceId: existingActive.id,
+        serviceId: (existingActive as any).id,
       },
       { status: 409 }
     );
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
   } = parsed.data;
 
   // 3. Verify vehicle belongs to user
-  const { data: vehicle } = await supabase
+  const { data: vehicle } = await (supabase as any)
     .from("vehicles")
     .select("id, is_active")
     .eq("id", vehicle_id)
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 4. Get online drivers (service client)
-  const { data: onlineDrivers } = await serviceClient
+  const { data: onlineDrivers } = await (serviceClient as any)
     .from("driver_profiles")
     .select("id, current_lat, current_lng, availability, is_active")
     .eq("availability", "online")
@@ -179,10 +179,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Find nearest driver for estimation
-  let nearestDriver = onlineDrivers[0];
+  let nearestDriver = onlineDrivers[0] as any;
   let minDistance = Infinity;
 
-  for (const driver of onlineDrivers) {
+  for (const driver of onlineDrivers as any[]) {
     const dLat = Number(driver.current_lat ?? pickup_lat);
     const dLng = Number(driver.current_lng ?? pickup_lng);
     const dist = haversineDistanceKm(
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
   };
 
   // 5. Get current pricing
-  const { data: pricingData } = await supabase
+  const { data: pricingData } = await (supabase as any)
     .from("pricing_config")
     .select("price_per_km")
     .eq("id", 1)
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
   const breakdown = calculatePrice(distances, pricePerKm);
 
   // 7. Insert service record using serviceClient to bypass RLS restrictions safely
-  const { data: newService, error: insertError } = await serviceClient
+  const { data: newService, error: insertError } = await (serviceClient as any)
     .from("services")
     .insert({
       rider_id: user.id,
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 8. Record in audit log
-  await serviceClient.from("service_status_log").insert({
+  await (serviceClient as any).from("service_status_log").insert({
     service_id: newService.id,
     from_status: null,
     to_status: "requested",

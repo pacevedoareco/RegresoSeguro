@@ -15,9 +15,9 @@
 | TASK-003 | Database Schema: Supabase Migrations | ✅ Completed |
 | TASK-004 | Vehicle Management | ✅ Completed |
 | TASK-005 | Service Request Flow (Rider) | ✅ Completed |
-| TASK-006 | Real-time Status Tracking (Rider) | ⏳ Pending |
+| TASK-006 | Real-time Status Tracking (Rider) | ✅ Completed |
 | TASK-007 | Driver Interface | ✅ Completed |
-| TASK-008 | Admin Panel: Operator Functions | ⏳ Pending |
+| TASK-008 | Admin Panel: Operator Functions | ✅ Completed |
 | TASK-009 | Mutual Rating | ⏳ Pending |
 | TASK-010 | Push Notifications | ⏳ Pending |
 | TASK-011 | Super-Admin: Driver Management & Pricing | ⏳ Pending |
@@ -251,11 +251,11 @@
 - E2E-002, E2E-003
 
 **Definition of Done:**
-- [ ] Status updates in real-time (< 3 seconds) on all status transitions
-- [ ] Free cancellation from "Requested" works without strike
-- [ ] Post-assignment cancellation adds strike and warns user
-- [ ] Account suspension triggered at 3 strikes
-- [ ] Home screen shows active service instead of request form
+- [x] Status updates in real-time (< 3 seconds) on all status transitions
+- [x] Free cancellation from "Requested" works without strike
+- [x] Post-assignment cancellation adds strike and warns user
+- [x] Account suspension triggered at 3 strikes
+- [x] Home screen shows active service instead of request form
 
 ---
 
@@ -332,14 +332,14 @@
 - E2E-004
 
 **Definition of Done:**
-- [ ] Operator sees all pending requests in real-time
-- [ ] Operator can assign an online driver to a request
-- [ ] Stale GPS warning shown when driver location is older than 5 minutes
-- [ ] Operator can wait for GPS refresh or proceed with acknowledgement
-- [ ] Final price is calculated and displayed after assignment; formatted as `$1.500,00`
-- [ ] Rider receives real-time update on assignment
-- [ ] Offline/inactive drivers not available for assignment
-- [ ] Operator cancel from Assigned adds no strike; sends apology to rider with pre-fill data
+- [x] Operator sees all pending requests in real-time
+- [x] Operator can assign an online driver to a request
+- [x] Stale GPS warning shown when driver location is older than 5 minutes
+- [x] Operator can wait for GPS refresh or proceed with acknowledgement
+- [x] Final price is calculated and displayed after assignment; formatted as `$1.500,00`
+- [x] Rider receives real-time update on assignment
+- [x] Offline/inactive drivers not available for assignment
+- [x] Operator cancel from Assigned adds no strike; sends apology to rider with pre-fill data
 
 ---
 

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("driver_profiles")
     .update({
       current_lat: lat,

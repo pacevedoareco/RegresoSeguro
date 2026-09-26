@@ -66,7 +66,7 @@ export async function PATCH(
   }
 
   // Get service details
-  const { data: service, error: serviceError } = await serviceClient
+  const { data: service, error: serviceError } = await (serviceClient as any)
     .from("services")
     .select("*")
     .eq("id", id)
@@ -93,7 +93,7 @@ export async function PATCH(
   }
 
   // Check role & permissions
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from("profiles")
     .select("role")
     .eq("id", user.id)
@@ -123,7 +123,7 @@ export async function PATCH(
     updateData.completed_at = new Date().toISOString();
   }
 
-  const { data: updatedService, error: updateError } = await serviceClient
+  const { data: updatedService, error: updateError } = await (serviceClient as any)
     .from("services")
     .update(updateData)
     .eq("id", id)
@@ -139,7 +139,7 @@ export async function PATCH(
   }
 
   // Record audit log
-  await serviceClient.from("service_status_log").insert({
+  await (serviceClient as any).from("service_status_log").insert({
     service_id: id,
     from_status: currentStatus,
     to_status: newStatus,

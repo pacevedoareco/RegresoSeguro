@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   const serviceClient = await createServiceClient();
 
   // 1. Get current active pricing config
-  const { data: pricingData } = await supabase
+  const { data: pricingData } = await (supabase as any)
     .from("pricing_config")
     .select("price_per_km")
     .eq("id", 1)
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   const pricePerKm = Number(pricingData?.price_per_km ?? 1500);
 
   // 2. Find online & active drivers (using service client to bypass RLS)
-  const { data: onlineDrivers, error: driverError } = await serviceClient
+  const { data: onlineDrivers, error: driverError } = await (serviceClient as any)
     .from("driver_profiles")
     .select("id, current_lat, current_lng, availability, is_active")
     .eq("availability", "online")
@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Find the nearest online driver to the pickup point
-  let nearestDriver = onlineDrivers[0];
+  let nearestDriver = onlineDrivers[0] as any;
   let minDistance = Infinity;
 
-  for (const driver of onlineDrivers) {
+  for (const driver of onlineDrivers as any[]) {
     const dLat = Number(driver.current_lat ?? pickup_lat);
     const dLng = Number(driver.current_lng ?? pickup_lng);
     const dist = haversineDistanceKm(
