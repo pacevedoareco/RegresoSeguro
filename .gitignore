@@ -1,0 +1,29 @@
+node_modules
+.env
+.env.*
+!.env.example
+dist/
+build/
+coverage/
+.DS_Store
+# Next.js build output
+.next/
+out/
+
+# PWA service worker (generated at build time)
+public/sw.js
+public/workbox-*.js
+
+# Supabase local
+.supabase/
+
+# TypeScript incremental build
+*.tsbuildinfo
+
+# Playwright
+test-results/
+playwright-report/
+
+# Supabase generated local config — keep only migrations in git
+supabase/config.toml
+supabase/.temp/
