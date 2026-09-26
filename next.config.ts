@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
+  // Allow @serwist/next webpack plugin to work alongside Turbopack
+  turbopack: {},
 };
 
 export default withPWA(nextConfig);
