@@ -1,8 +1,30 @@
 # IMPLEMENTATION_PLAN — Regreso Seguro
 
-**Version:** 1.0  
-**Status:** Approved for MVP  
-**Last updated:** 2026-09-25  
+**Version:** 1.1
+**Status:** In Progress
+**Last updated:** 2026-09-26
+
+---
+
+## Task Status Dashboard
+
+| Task | Title | Status |
+|---|---|---|
+| TASK-001 | Project Foundation & Supabase Setup | ✅ Completed |
+| TASK-002 | Authentication (Registration & Login) | ✅ Completed |
+| TASK-003 | Database Schema: Supabase Migrations | ✅ Completed |
+| TASK-004 | Vehicle Management | ✅ Completed |
+| TASK-005 | Service Request Flow (Rider) | ✅ Completed |
+| TASK-006 | Real-time Status Tracking (Rider) | ⏳ Pending |
+| TASK-007 | Driver Interface | ✅ Completed |
+| TASK-008 | Admin Panel: Operator Functions | ⏳ Pending |
+| TASK-009 | Mutual Rating | ⏳ Pending |
+| TASK-010 | Push Notifications | ⏳ Pending |
+| TASK-011 | Super-Admin: Driver Management & Pricing | ⏳ Pending |
+| TASK-012 | Service History & Rider Profile | ⏳ Pending |
+| TASK-013 | Analytics Dashboard (Super-Admin) | ⏳ Pending |
+| TASK-014 | Email Notifications | ⏳ Pending |
+| TASK-015 | PWA Hardening & Production Readiness | ⏳ Pending |
 
 ---
 
@@ -151,10 +173,10 @@
 - UT validation on vehicle fields
 
 **Definition of Done:**
-- [ ] Rider can save a vehicle via profile page
-- [ ] Duplicate license plate rejected
-- [ ] Rider with saved vehicles sees selection at request time
-- [ ] New vehicle created during request is saved to profile
+- [x] Rider can save a vehicle via profile page
+- [x] Duplicate license plate rejected
+- [x] Rider with saved vehicles sees selection at request time
+- [x] New vehicle created during request is saved to profile
 
 ---
 
@@ -187,13 +209,13 @@
 - E2E-001 steps 5–8
 
 **Definition of Done:**
-- [ ] Rider can pin/enter pickup location on map
-- [ ] Rider can pin/enter destination on map
-- [ ] Price estimate shown with 3 itemized components; formatted as `$1.500,00`
-- [ ] Request submitted and service created in DB
-- [ ] Duplicate active request blocked with error
-- [ ] Suspended rider blocked at request step
-- [ ] No-drivers-online state shows block message; confirm button disabled
+- [x] Rider can pin/enter pickup location on map
+- [x] Rider can pin/enter destination on map
+- [x] Price estimate shown with 3 itemized components; formatted as `$1.500,00`
+- [x] Request submitted and service created in DB
+- [x] Duplicate active request blocked with error
+- [x] Suspended rider blocked at request step
+- [x] No-drivers-online state shows block message; confirm button disabled
 
 ---
 
@@ -266,12 +288,12 @@
 - M-004 (GPS permission on mobile)
 
 **Definition of Done:**
-- [ ] Driver can toggle online/offline
-- [ ] GPS updates stored while driver is online
-- [ ] Driver cannot go offline during active service
-- [ ] Driver sees assigned job details
-- [ ] Driver can advance status through all steps
-- [ ] Status changes broadcast to rider in real-time
+- [x] Driver can toggle online/offline
+- [x] GPS updates stored while driver is online
+- [x] Driver cannot go offline during active service
+- [x] Driver sees assigned job details
+- [x] Driver can advance status through all steps
+- [x] Status changes broadcast to rider in real-time
 
 ---
 
