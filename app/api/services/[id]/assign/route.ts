@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { calculatePrice } from "@/lib/pricing/pricing";
 import { calculateThreeLegDistances } from "@/lib/services/routing";
+import { getStatusNotificationContent, sendPushToUser } from "@/lib/push/push";
 
 const assignSchema = z.object({
   driver_id: z.string().uuid("ID de conductor inválido"),
@@ -252,6 +253,20 @@ export async function POST(
     changed_by: user.id,
     notes: auditNote,
   });
+
+  // 8. Send push notification to rider (FR-019 / AC-019-1)
+  try {
+    const driverName = driverProfile.profile?.full_name || undefined;
+    const notificationPayload = getStatusNotificationContent("assigned", {
+      driverName,
+      serviceId: id,
+    });
+    if (notificationPayload && service.rider_id) {
+      await sendPushToUser(service.rider_id, notificationPayload);
+    }
+  } catch (pushErr: any) {
+    console.error("[assign:post] Push notification failed:", pushErr.message);
+  }
 
   return NextResponse.json(
     {

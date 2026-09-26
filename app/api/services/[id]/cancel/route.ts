@@ -9,6 +9,8 @@ import {
   shouldBeSuspended,
 } from "@/lib/strikes/strikes";
 import { ServiceStatus } from "@/types/database";
+import { getStatusNotificationContent, sendPushToUser } from "@/lib/push/push";
+import { sendStrikeWarning } from "@/lib/resend/emails";
 
 const cancelSchema = z.object({
   reason: z.string().optional(),
@@ -130,6 +132,22 @@ export async function POST(
     if (profileUpdateError) {
       console.error("[cancel:post] Profile update error:", profileUpdateError.message);
     }
+
+    // Send transactional strike warning email (FR-020 / AC-020-2)
+    if (user.email) {
+      try {
+        const { data: riderProfile } = await (serviceClient as any)
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+
+        const riderName = riderProfile?.full_name || "Pasajero";
+        await sendStrikeWarning(user.email, riderName, newStrikes);
+      } catch (emailErr: any) {
+        console.error("[cancel:post] Failed to send strike email:", emailErr.message);
+      }
+    }
   }
 
   // Update service record
@@ -168,6 +186,19 @@ export async function POST(
     changed_by: user.id,
     notes: cancellationNote,
   });
+
+  // Send cancellation push notification to rider (if operator cancelled or external cancellation)
+  try {
+    const notificationPayload = getStatusNotificationContent("cancelled", {
+      cancellationReason: cancellationNote,
+      serviceId: id,
+    });
+    if (notificationPayload && service.rider_id) {
+      await sendPushToUser(service.rider_id, notificationPayload);
+    }
+  } catch (pushErr: any) {
+    console.error("[cancel:post] Push notification failed:", pushErr.message);
+  }
 
   return NextResponse.json(
     {

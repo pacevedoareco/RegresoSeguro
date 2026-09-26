@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { ServiceRequestWizard } from "@/components/ServiceRequestWizard";
 import { RiderStatusTracker } from "@/components/RiderStatusTracker";
+import PushNotificationManager from "@/components/PushNotificationManager";
 import { createClient } from "@/lib/supabase/client";
 import type { Service, Vehicle, Profile } from "@/types/database";
 
@@ -74,22 +75,29 @@ export default function HomePage() {
 
           <div className="flex items-center gap-3 text-xs font-semibold">
             <Link
-              href="/vehicles"
+              href="/profile/trips"
               className="text-gray-600 hover:text-blue-600 transition"
             >
-              Mis Autos
+              Mis Viajes
+            </Link>
+            <Link
+              href="/profile"
+              className="text-gray-600 hover:text-blue-600 transition"
+            >
+              Mi Perfil
             </Link>
             <Link
               href="/driver"
               className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
             >
-              Soy Conductor
+              Chofer
             </Link>
           </div>
         </div>
       </header>
 
       <main className="max-w-xl mx-auto px-4 pt-6">
+        <PushNotificationManager />
         {loading ? (
           <div className="text-center py-16 text-sm text-gray-400">
             Cargando estado...

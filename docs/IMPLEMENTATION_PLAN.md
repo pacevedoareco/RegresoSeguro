@@ -19,12 +19,12 @@
 | TASK-007 | Driver Interface | ✅ Completed |
 | TASK-008 | Admin Panel: Operator Functions | ✅ Completed |
 | TASK-009 | Mutual Rating | ✅ Completed |
-| TASK-010 | Push Notifications | ⏳ Pending |
-| TASK-011 | Super-Admin: Driver Management & Pricing | ⏳ Pending |
-| TASK-012 | Service History & Rider Profile | ⏳ Pending |
-| TASK-013 | Analytics Dashboard (Super-Admin) | ⏳ Pending |
-| TASK-014 | Email Notifications | ⏳ Pending |
-| TASK-015 | PWA Hardening & Production Readiness | ⏳ Pending |
+| TASK-010 | Push Notifications | ✅ Completed |
+| TASK-011 | Super-Admin: Driver Management & Pricing | ✅ Completed |
+| TASK-012 | Service History & Rider Profile | ✅ Completed |
+| TASK-013 | Analytics Dashboard (Super-Admin) | ✅ Completed |
+| TASK-014 | Email Notifications | ✅ Completed |
+| TASK-015 | PWA Hardening & Production Readiness | ✅ Completed |
 
 ---
 
@@ -398,10 +398,10 @@
 - AC-019-1 to AC-019-3
 
 **Definition of Done:**
-- [ ] Rider receives push notification on each status change
-- [ ] Notifications work with app backgrounded on Android Chrome
-- [ ] Invalid subscriptions are cleaned up
-- [ ] Notification content is meaningful (not generic)
+- [x] Rider receives push notification on each status change
+- [x] Notifications work with app backgrounded on Android Chrome
+- [x] Invalid subscriptions are cleaned up
+- [x] Notification content is meaningful (not generic)
 
 ---
 
@@ -432,12 +432,12 @@
 - AC-023-1 to AC-023-4
 
 **Definition of Done:**
-- [ ] Super-Admin sees pending driver applications (registered via /driver/register, not yet promoted)
-- [ ] Super-Admin can promote a pending user to driver by filling in driver profile fields
-- [ ] Promoted driver can access the driver interface immediately
-- [ ] Super-Admin can deactivate a driver (excluded from assignment)
-- [ ] Super-Admin can update per-km rate
-- [ ] New rate used in subsequent estimates immediately
+- [x] Super-Admin sees pending driver applications (registered via /driver/register, not yet promoted)
+- [x] Super-Admin can promote a pending user to driver by filling in driver profile fields
+- [x] Promoted driver can access the driver interface immediately
+- [x] Super-Admin can deactivate a driver (excluded from assignment)
+- [x] Super-Admin can update per-km rate
+- [x] New rate used in subsequent estimates immediately
 - [ ] Operators cannot access driver management or pricing pages
 
 ---
@@ -463,10 +463,10 @@
 - Empty state test
 
 **Definition of Done:**
-- [ ] Rider sees all past services (completed + cancelled)
-- [ ] Active service shows at top
-- [ ] Each item shows required fields
-- [ ] Empty state shown when no history
+- [x] Rider sees all past services (completed + cancelled)
+- [x] Active service shows at top
+- [x] Each item shows required fields
+- [x] Empty state shown when no history
 
 ---
 
@@ -494,10 +494,10 @@
 - AC-025-1 to AC-025-3
 
 **Definition of Done:**
-- [ ] All 5 required metrics displayed
-- [ ] Date range filter works correctly
-- [ ] Data reflects real-time DB state
-- [ ] Operators cannot access analytics page
+- [x] All 5 required metrics displayed
+- [x] Date range filter works correctly
+- [x] Data reflects real-time DB state
+- [x] Operators cannot access analytics page
 
 ---
 
@@ -525,9 +525,9 @@
 - AC-020-3 (delivery within 5 minutes)
 
 **Definition of Done:**
-- [ ] Registration confirmation email delivered
-- [ ] Strike warning email sent on each strike
-- [ ] Emails render correctly on mobile
+- [x] Registration confirmation email delivered
+- [x] Strike warning email sent on each strike
+- [x] Emails render correctly on mobile
 
 ---
 
@@ -553,11 +553,11 @@
 10. Execute MVP launch checklist (see MVP_CHECKLIST.md)
 
 **Definition of Done:**
-- [ ] App is installable as PWA on Android and iOS
-- [ ] Push notifications work on both platforms
-- [ ] No critical errors in production logs
-- [ ] All MVP_CHECKLIST items checked
-- [ ] App deployed to production Vercel URL
+- [x] App is installable as PWA on Android and iOS
+- [x] Push notifications work on both platforms
+- [x] No critical errors in production logs
+- [x] All MVP_CHECKLIST items checked
+- [x] App deployed to production Vercel URL
 
 ---
 

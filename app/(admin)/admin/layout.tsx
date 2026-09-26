@@ -39,6 +39,36 @@ export default function AdminLayout({
               📋 Solicitudes
             </Link>
             <Link
+              href="/admin/drivers"
+              className={`px-3 py-1.5 rounded-lg transition ${
+                pathname === "/admin/drivers"
+                  ? "bg-slate-800 text-white font-bold"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              🚗 Choferes
+            </Link>
+            <Link
+              href="/admin/pricing"
+              className={`px-3 py-1.5 rounded-lg transition ${
+                pathname === "/admin/pricing"
+                  ? "bg-slate-800 text-white font-bold"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              💵 Tarifas
+            </Link>
+            <Link
+              href="/admin/analytics"
+              className={`px-3 py-1.5 rounded-lg transition ${
+                pathname === "/admin/analytics"
+                  ? "bg-slate-800 text-white font-bold"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              📊 Analíticas
+            </Link>
+            <Link
               href="/"
               className="px-3 py-1.5 text-slate-400 hover:text-slate-200 transition"
             >

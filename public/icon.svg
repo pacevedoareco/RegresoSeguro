@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="100" fill="#1e40af"/>
+  <circle cx="256" cy="256" r="180" fill="#2563eb"/>
+  <path d="M160 300 L180 220 C185 200 200 190 220 190 L292 190 C312 190 327 200 332 220 L352 300 C360 300 370 310 370 320 L370 360 C370 370 360 380 350 380 L340 380 C330 380 320 370 320 360 L320 340 L192 340 L192 360 C192 370 182 380 172 380 L162 380 C152 380 142 370 142 360 L142 320 C142 310 152 300 160 300 Z" fill="#ffffff"/>
+  <circle cx="190" cy="300" r="16" fill="#1e40af"/>
+  <circle cx="322" cy="300" r="16" fill="#1e40af"/>
+  <path d="M195 230 L317 230 L305 270 L207 270 Z" fill="#93c5fd"/>
+  <!-- Shield Emblem Top Right -->
+  <path d="M360 140 L410 160 L410 200 C410 230 360 250 360 250 C360 250 310 230 310 200 L310 160 Z" fill="#fbbf24"/>
+  <path d="M345 195 L355 205 L375 180" stroke="#1e40af" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

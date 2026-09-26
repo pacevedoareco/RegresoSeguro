@@ -20,7 +20,7 @@ const createServiceSchema = z.object({
   destination_lng: z.number().min(-180).max(180),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,8 +33,11 @@ export async function GET() {
     );
   }
 
-  // Find active service for this rider (requested, assigned, en_route, in_progress)
-  const { data, error } = await (supabase as any)
+  const { searchParams } = new URL(request.url);
+  const includeHistory = searchParams.get("history") === "true";
+
+  // 1. Find active service for this rider (requested, assigned, en_route, in_progress)
+  const { data: activeService, error: activeError } = await (supabase as any)
     .from("services")
     .select("*, vehicle:vehicles(*), driver:profiles!services_driver_id_fkey(*)")
     .eq("rider_id", user.id)
@@ -42,15 +45,36 @@ export async function GET() {
     .order("requested_at", { ascending: false })
     .maybeSingle();
 
-  if (error) {
-    console.error("[services:get] Error fetching active service:", error.message);
+  if (activeError) {
+    console.error("[services:get] Error fetching active service:", activeError.message);
     return NextResponse.json(
       { code: "FETCH_ERROR", message: "Error al consultar servicios activos." },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ activeService: data }, { status: 200 });
+  // 2. If history requested, fetch completed & cancelled past services with ratings (FR-021)
+  let pastServices = [];
+  if (includeHistory) {
+    const { data: historyData, error: historyError } = await (supabase as any)
+      .from("services")
+      .select("*, vehicle:vehicles(*), driver:profiles!services_driver_id_fkey(full_name, phone), ratings(*)")
+      .eq("rider_id", user.id)
+      .in("status", ["completed", "cancelled"])
+      .order("requested_at", { ascending: false });
+
+    if (!historyError && historyData) {
+      pastServices = historyData;
+    }
+  }
+
+  return NextResponse.json(
+    {
+      activeService: activeService || null,
+      history: pastServices,
+    },
+    { status: 200 }
+  );
 }
 
 export async function POST(request: NextRequest) {

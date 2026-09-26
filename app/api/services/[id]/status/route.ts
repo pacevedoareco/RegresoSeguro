@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTransition } from "@/lib/services/transitions";
 import { ServiceStatus } from "@/types/database";
+import { getStatusNotificationContent, sendPushToUser } from "@/lib/push/push";
 
 const updateStatusSchema = z.object({
   status: z.enum([
@@ -146,6 +147,18 @@ export async function PATCH(
     changed_by: user.id,
     notes: notes || `Status transitioned by ${userRole}`,
   });
+
+  // Send push notification to rider on status transition (FR-019)
+  try {
+    const notificationPayload = getStatusNotificationContent(newStatus, {
+      serviceId: id,
+    });
+    if (notificationPayload && service.rider_id) {
+      await sendPushToUser(service.rider_id, notificationPayload);
+    }
+  } catch (pushErr: any) {
+    console.error("[status:patch] Push notification failed:", pushErr.message);
+  }
 
   return NextResponse.json(
     { service: updatedService, message: "Estado actualizado con éxito." },
