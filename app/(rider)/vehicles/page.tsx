@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { Vehicle } from "@/types/database";
 import { VehicleSelector } from "@/components/VehicleSelector";
 
@@ -41,12 +42,12 @@ export default function VehiclesPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
         <div className="mb-6">
-          <a
+          <Link
             href="/"
             className="text-sm font-medium text-blue-600 hover:text-blue-700 mb-2 inline-block"
           >
             ← Volver al inicio
-          </a>
+          </Link>
           <h1 className="text-2xl font-bold text-gray-900">Mis Vehículos</h1>
           <p className="text-sm text-gray-600">
             Administrá los autos que usás para solicitar el servicio de conductor designado.

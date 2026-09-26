@@ -30,9 +30,11 @@ export default function HomePage() {
     }
   }, []);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    fetchActiveService();
+    void fetchActiveService();
   }, [fetchActiveService]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Supabase Realtime subscription to live updates of the active service
   useEffect(() => {

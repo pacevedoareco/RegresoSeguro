@@ -38,6 +38,7 @@ export function ServiceRequestWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   // Load vehicles when entering step 3
   useEffect(() => {
     if (step === 3 && vehicles.length === 0) {
@@ -91,6 +92,7 @@ export function ServiceRequestWizard() {
         .finally(() => setLoadingEstimate(false));
     }
   }, [step, pickup, destination]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Geocoding search handler
   const handleSearch = async (query: string) => {

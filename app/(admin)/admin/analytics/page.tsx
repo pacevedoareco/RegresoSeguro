@@ -27,14 +27,14 @@ export default function AnalyticsAdminPage() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
 
-  // Date filters (default last 30 days)
-  const defaultFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-  const defaultTo = new Date().toISOString().split("T")[0];
-
-  const [fromDate, setFromDate] = useState(defaultFrom);
-  const [toDate, setToDate] = useState(defaultTo);
+  // Date filters (default last 30 days) — initialized once via useState to avoid impure Date.now() during render
+  const [fromDate, setFromDate] = useState<string>(() => {
+    const d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return d.toISOString().split("T")[0];
+  });
+  const [toDate, setToDate] = useState<string>(() =>
+    new Date().toISOString().split("T")[0]
+  );
 
   const fetchAnalytics = useCallback(async (from?: string, to?: string) => {
     setLoading(true);
@@ -90,11 +90,11 @@ export default function AnalyticsAdminPage() {
       }
 
       setIsSuperAdmin(true);
-      fetchAnalytics(defaultFrom, defaultTo);
+      fetchAnalytics(fromDate, toDate);
     };
 
     checkRole();
-  }, [router, fetchAnalytics, defaultFrom, defaultTo]);
+  }, [router, fetchAnalytics, fromDate, toDate]);
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();

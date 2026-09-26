@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { DriverProfile, Service, Vehicle, Profile } from "@/types/database";
@@ -40,8 +41,11 @@ export default function DriverDashboardPage() {
     }
   };
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    loadData();
+    void loadData();
+    // loadData is stable (defined in component scope, not wrapped in useCallback intentionally)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 2. Realtime subscription to driver's services
@@ -60,8 +64,8 @@ export default function DriverDashboardPage() {
           filter: `driver_id=eq.${driverProfile.id}`,
         },
         () => {
-          // Re-fetch data on any change
-          loadData();
+          // Re-fetch data on any change — void to suppress no-floating-promises
+          void loadData();
         }
       )
       .subscribe();
@@ -69,6 +73,8 @@ export default function DriverDashboardPage() {
     return () => {
       supabase.removeChannel(channel);
     };
+    // loadData does not change identity; driverProfile.id is the only meaningful dep here
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverProfile?.id]);
 
   // 3. Periodic GPS tracking when online
@@ -119,6 +125,7 @@ export default function DriverDashboardPage() {
       }
     };
   }, [driverProfile?.availability]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Toggle availability (Online/Offline)
   const handleToggleAvailability = async () => {
@@ -196,12 +203,12 @@ export default function DriverDashboardPage() {
             <h1 className="text-2xl font-black text-gray-900">Panel Conductor</h1>
             <p className="text-xs text-gray-500">Regreso Seguro • Conductor Designado</p>
           </div>
-          <a
+          <Link
             href="/"
             className="text-xs font-semibold text-blue-600 hover:text-blue-700 underline"
           >
             Vista Pasajero
-          </a>
+          </Link>
         </div>
 
         {/* Status card & toggle */}

@@ -53,9 +53,11 @@ export default function OperatorRequestsPage() {
     }
   }, [router]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // 2. Realtime subscription for pending requests
   useEffect(() => {

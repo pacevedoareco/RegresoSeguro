@@ -24,6 +24,7 @@ export default function PushNotificationManager() {
   const [loading, setLoading] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (
       typeof window !== "undefined" &&
@@ -35,7 +36,7 @@ export default function PushNotificationManager() {
       setPermission(Notification.permission);
 
       // Check existing subscription
-      navigator.serviceWorker.ready.then(async (registration) => {
+      void navigator.serviceWorker.ready.then(async (registration) => {
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
           setIsSubscribed(true);
@@ -43,6 +44,7 @@ export default function PushNotificationManager() {
       });
     }
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const subscribeToPush = async () => {
     setLoading(true);

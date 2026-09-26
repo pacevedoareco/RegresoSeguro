@@ -40,6 +40,8 @@ export default function MapView({
     driver?: L.Marker;
   }>({});
 
+  // Map is initialized once on mount. center/zoom/onMapClick/interactive are handled
+  // by their own effects below to avoid re-creating the map instance on every render.
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -68,9 +70,11 @@ export default function MapView({
     return () => {
       // Keep map alive unless unmounted
     };
+    // Intentional empty deps — map is created once on mount; subsequent prop changes handled below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update center when changed
+  // Update center when changed — only center and zoom are needed; map instance is a stable ref
   useEffect(() => {
     if (mapInstanceRef.current && center) {
       mapInstanceRef.current.setView(center, zoom);
