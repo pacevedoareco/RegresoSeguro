@@ -230,7 +230,7 @@ export async function POST(
       price_per_km_at_time: pricePerKm,
     })
     .eq("id", id)
-    .select("*, vehicle:vehicles(*), driver:profiles!services_driver_id_fkey(*), rider:profiles!services_rider_id_fkey(*)")
+    .select()
     .single();
 
   if (updateError) {
