@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { DriverProfile, Service, Vehicle, Profile } from "@/types/database";
 import { JobCard } from "@/components/JobCard";
+import { RatingModal } from "@/components/RatingModal";
 
 export default function DriverDashboardPage() {
   const router = useRouter();
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null);
   const [activeJob, setActiveJob] = useState<(Service & { vehicle?: Vehicle; rider?: Profile }) | null>(null);
+  const [completedJobForRating, setCompletedJobForRating] = useState<(Service & { rider?: Profile }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -168,6 +170,7 @@ export default function DriverDashboardPage() {
     }
 
     if (newStatus === "completed") {
+      setCompletedJobForRating(activeJob);
       setActiveJob(null);
     } else {
       setActiveJob((prev) => (prev ? { ...prev, status: newStatus } : null));
@@ -270,6 +273,17 @@ export default function DriverDashboardPage() {
                 : "Conectate para comenzar a recibir viajes de regreso seguro."}
             </p>
           </div>
+        )}
+
+        {/* Rating Modal for Driver upon Completion (BR-024) */}
+        {completedJobForRating && (
+          <RatingModal
+            serviceId={completedJobForRating.id}
+            targetName={completedJobForRating.rider?.full_name || "Pasajero"}
+            targetRoleLabel="Pasajero"
+            onSubmitted={() => setCompletedJobForRating(null)}
+            onDismiss={() => setCompletedJobForRating(null)}
+          />
         )}
       </div>
     </div>

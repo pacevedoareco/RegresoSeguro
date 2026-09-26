@@ -18,7 +18,7 @@
 | TASK-006 | Real-time Status Tracking (Rider) | ✅ Completed |
 | TASK-007 | Driver Interface | ✅ Completed |
 | TASK-008 | Admin Panel: Operator Functions | ✅ Completed |
-| TASK-009 | Mutual Rating | ⏳ Pending |
+| TASK-009 | Mutual Rating | ✅ Completed |
 | TASK-010 | Push Notifications | ⏳ Pending |
 | TASK-011 | Super-Admin: Driver Management & Pricing | ⏳ Pending |
 | TASK-012 | Service History & Rider Profile | ⏳ Pending |
@@ -367,11 +367,11 @@
 - M-010 (dismiss without rating)
 
 **Definition of Done:**
-- [ ] Rating prompt appears on completion for both parties
-- [ ] Rating stored; second submission attempt rejected
-- [ ] Driver's average rating updated after each new rating
-- [ ] Rider's average rating updated after each new rating
-- [ ] Dismissal does not cause crash or repeated prompt
+- [x] Rating prompt appears on completion for both parties
+- [x] Rating stored; second submission attempt rejected
+- [x] Driver's average rating updated after each new rating
+- [x] Rider's average rating updated after each new rating
+- [x] Dismissal does not cause crash or repeated prompt
 
 ---
 

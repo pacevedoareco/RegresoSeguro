@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatPrice } from "@/lib/pricing/pricing";
+import { RatingModal } from "@/components/RatingModal";
 import type { Service, Vehicle, Profile } from "@/types/database";
 
 interface RiderStatusTrackerProps {
@@ -26,9 +27,11 @@ export function RiderStatusTracker({
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [ratingDismissed, setRatingDismissed] = useState(false);
 
   const isCancelled = service.status === "cancelled";
   const isCompleted = service.status === "completed";
+  const showRatingModal = isCompleted && !ratingDismissed;
   const isRequested = service.status === "requested";
   const isAssigned = service.status === "assigned";
   const canCancel = isRequested || isAssigned;
@@ -303,6 +306,17 @@ export function RiderStatusTracker({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Rating Modal on Completion (BR-024) */}
+      {showRatingModal && (
+        <RatingModal
+          serviceId={service.id}
+          targetName={service.driver?.full_name || "Conductor designado"}
+          targetRoleLabel="Conductor"
+          onSubmitted={() => setRatingDismissed(true)}
+          onDismiss={() => setRatingDismissed(true)}
+        />
       )}
     </div>
   );
