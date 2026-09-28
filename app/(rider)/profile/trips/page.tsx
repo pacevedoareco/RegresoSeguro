@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -38,35 +38,61 @@ export default function TripsHistoryPage() {
   const [history, setHistory] = useState<ServiceItem[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadTrips = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  const loadTrips = useCallback(async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!user) {
-        router.push("/auth/login");
-        return;
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+    setUserId(user.id);
+
+    try {
+      const res = await fetch("/api/services?history=true");
+      if (res.ok) {
+        const data = await res.json();
+        setActiveService(data.activeService || null);
+        setHistory(data.history || []);
       }
-      setUserId(user.id);
-
-      try {
-        const res = await fetch("/api/services?history=true");
-        if (res.ok) {
-          const data = await res.json();
-          setActiveService(data.activeService || null);
-          setHistory(data.history || []);
-        }
-      } catch (err) {
-        console.error("Error loading trips:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTrips();
+    } catch (err) {
+      console.error("Error loading trips:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
+
+  useEffect(() => {
+    void loadTrips();
+  }, [loadTrips]);
+
+  // Realtime subscription: re-fetch when the active service changes status
+  useEffect(() => {
+    if (!activeService?.id) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`trips_active_${activeService.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "services",
+          filter: `id=eq.${activeService.id}`,
+        },
+        () => {
+          void loadTrips();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeService?.id, loadTrips]);
 
   const formatPrice = (amount: number | null) => {
     if (amount === null || amount === undefined) return "—";
