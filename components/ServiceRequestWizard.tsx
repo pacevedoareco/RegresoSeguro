@@ -576,19 +576,19 @@ export function ServiceRequestWizard() {
               <div className="space-y-1.5 text-xs text-gray-700">
                 <div className="flex justify-between">
                   <span>1. Chofer → Punto de partida:</span>
-                  <span className="font-medium">{estimate.pickupKm} km</span>
+                  <span className="font-medium">{Math.round(estimate.pickupKm)} km</span>
                 </div>
                 <div className="flex justify-between">
                   <span>2. Punto de partida → Destino:</span>
-                  <span className="font-medium">{estimate.rideKm} km</span>
+                  <span className="font-medium">{Math.round(estimate.rideKm)} km</span>
                 </div>
                 <div className="flex justify-between">
                   <span>3. Retorno del chofer:</span>
-                  <span className="font-medium">{estimate.returnKm} km</span>
+                  <span className="font-medium">{Math.round(estimate.returnKm)} km</span>
                 </div>
                 <div className="pt-2 border-t border-blue-200/60 flex justify-between font-semibold text-gray-900">
                   <span>Distancia total facturable:</span>
-                  <span>{estimate.totalKm} km</span>
+                  <span>{Math.round(estimate.totalKm)} km</span>
                 </div>
               </div>
 
