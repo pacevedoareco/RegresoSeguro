@@ -106,7 +106,7 @@ export default function OperatorRequestsPage() {
           table: "services",
         },
         () => {
-          loadData();
+          void loadData();
         }
       )
       .subscribe();

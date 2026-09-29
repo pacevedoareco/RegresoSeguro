@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -22,7 +22,7 @@ export default function DriverDashboardPage() {
   const watchIdRef = useRef<number | null>(null);
 
   // 1. Initial load of driver data
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const res = await fetch("/api/driver/availability");
       if (res.status === 401 || res.status === 403 || res.status === 404) {
@@ -39,43 +39,61 @@ export default function DriverDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     void loadData();
-    // loadData is stable (defined in component scope, not wrapped in useCallback intentionally)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadData]);
 
   // 2. Realtime subscription to driver's services
   useEffect(() => {
     if (!driverProfile) return;
 
     const supabase = createClient();
-    const channel = supabase
-      .channel(`driver_services_${driverProfile.id}`)
+
+    // UPDATE on rows already assigned to this driver (status changes, cancellations)
+    const updateChannel = supabase
+      .channel(`driver_services_update_${driverProfile.id}`)
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "UPDATE",
           schema: "public",
           table: "services",
           filter: `driver_id=eq.${driverProfile.id}`,
         },
-        () => {
-          // Re-fetch data on any change — void to suppress no-floating-promises
-          void loadData();
+        () => { void loadData(); }
+      )
+      .subscribe();
+
+    // INSERT/UPDATE without driver_id filter: catches the moment the operator assigns
+    // a brand-new job to this driver (driver_id transitions from NULL → this id).
+    // We filter client-side inside loadData so no extra data is exposed.
+    const assignChannel = supabase
+      .channel(`driver_services_assign_${driverProfile.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "services",
+          filter: `status=eq.assigned`,
+        },
+        (payload) => {
+          // Only reload if the newly assigned driver is us
+          if ((payload.new as { driver_id?: string }).driver_id === driverProfile.id) {
+            void loadData();
+          }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(updateChannel);
+      supabase.removeChannel(assignChannel);
     };
-    // loadData does not change identity; driverProfile.id is the only meaningful dep here
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [driverProfile?.id]);
+  }, [driverProfile?.id, loadData]);
 
   // 3. Periodic GPS tracking when online
   useEffect(() => {
