@@ -272,7 +272,12 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (insertError) {
-    console.error("[services:post] Insert error:", insertError.message);
+    console.error("[services:post] Insert error:", {
+      code: insertError.code,
+      message: insertError.message,
+      details: insertError.details,
+      hint: insertError.hint,
+    });
     return NextResponse.json(
       { code: "SERVICE_CREATE_ERROR", message: "Error al registrar la solicitud." },
       { status: 500 }

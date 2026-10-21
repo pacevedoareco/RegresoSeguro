@@ -25,13 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
-=======
-      - uses: actions/checkout@v5
       - uses: actions/setup-node@v7
->>>>>>> origin/dependabot/github_actions/actions/setup-node-7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -43,13 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
-=======
-      - uses: actions/checkout@v5
       - uses: actions/setup-node@v7
->>>>>>> origin/dependabot/github_actions/actions/setup-node-7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -61,13 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
-=======
-      - uses: actions/checkout@v5
       - uses: actions/setup-node@v7
->>>>>>> origin/dependabot/github_actions/actions/setup-node-7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -85,13 +70,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
       NEXT_PUBLIC_VAPID_PUBLIC_KEY: ci-placeholder
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
-=======
-      - uses: actions/checkout@v5
       - uses: actions/setup-node@v7
->>>>>>> origin/dependabot/github_actions/actions/setup-node-7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
