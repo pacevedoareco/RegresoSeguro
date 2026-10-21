@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Service, Vehicle, Profile } from "@/types/database";
 import { formatPrice } from "@/lib/pricing/pricing";
+import { getPaymentMethodInfo } from "@/lib/payments/payments";
 
 interface JobCardProps {
   service: Service & { vehicle?: Vehicle; rider?: Profile };
@@ -56,14 +57,34 @@ export function JobCard({ service, onStatusChange }: JobCardProps) {
             <span className="text-xs text-gray-500 block">📞 {service.rider.phone}</span>
           )}
         </div>
-        {service.estimated_price && (
+        {(service.final_price ?? service.estimated_price) != null && (
           <div className="text-right">
             <span className="text-xs text-gray-400 block font-medium">Tarifa</span>
             <span className="text-lg font-black text-blue-900">
-              {formatPrice(service.estimated_price)}
+              {formatPrice(Number(service.final_price ?? service.estimated_price))}
             </span>
           </div>
         )}
+      </div>
+
+      {/* HU-12: payment method so the driver knows whether to collect cash */}
+      <div
+        className={`p-3 rounded-2xl border text-xs flex items-center justify-between ${
+          service.payment_method === "cash"
+            ? "bg-amber-50 border-amber-200 text-amber-900"
+            : "bg-indigo-50 border-indigo-100 text-indigo-900"
+        }`}
+      >
+        <span className="font-bold">
+          {getPaymentMethodInfo(service.payment_method).icon} {getPaymentMethodInfo(service.payment_method).label}
+        </span>
+        <span>
+          {service.payment_method === "cash"
+            ? "Cobrar en efectivo al finalizar"
+            : service.payment_status === "paid"
+            ? "✓ Pagado por la app"
+            : "Pago digital pendiente"}
+        </span>
       </div>
 
       {/* Route & Vehicle */}

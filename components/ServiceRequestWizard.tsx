@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import type { Vehicle } from "@/types/database";
+import type { PaymentMethod, Vehicle } from "@/types/database";
 import type { PriceBreakdown } from "@/lib/pricing/pricing";
 import { formatPrice } from "@/lib/pricing/pricing";
+import { PAYMENT_METHODS, getPaymentMethodInfo } from "@/lib/payments/payments";
 import { VehicleSelector } from "./VehicleSelector";
 
 // Dynamically import MapView to avoid Leaflet SSR window errors
@@ -37,6 +38,9 @@ export function ServiceRequestWizard() {
   const [loadingEstimate, setLoadingEstimate] = useState(false);
   const [noDriversAvailable, setNoDriversAvailable] = useState(false);
 
+  // HU-12: payment method chosen at confirmation
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -50,7 +54,8 @@ export function ServiceRequestWizard() {
         if (parsed.pickup && parsed.destination && parsed.vehicle) {
           setPickup(parsed.pickup);
           setDestination(parsed.destination);
-          
+          if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+
           const vehicleData = parsed.vehicle;
           // Check if vehicle was temporary
           if (vehicleData.id?.startsWith("temp-")) {
@@ -238,6 +243,7 @@ export function ServiceRequestWizard() {
             pickup,
             destination,
             vehicle: vehicleObj,
+            paymentMethod,
           })
         );
       } catch {
@@ -259,6 +265,7 @@ export function ServiceRequestWizard() {
           destination_address: destination.address,
           destination_lat: destination.lat,
           destination_lng: destination.lng,
+          payment_method: paymentMethod,
         }),
       });
 
@@ -271,6 +278,7 @@ export function ServiceRequestWizard() {
               pickup,
               destination,
               vehicle: vehicleObj,
+              paymentMethod,
             })
           );
         } catch {
@@ -552,6 +560,12 @@ export function ServiceRequestWizard() {
                 {selectedVehicle?.make_model} ({selectedVehicle?.license_plate}) - {selectedVehicle?.color}
               </span>
             </div>
+            <div className="flex items-start gap-2 text-xs">
+              <span className="font-bold text-gray-600 min-w-16">PAGO:</span>
+              <span className="text-gray-800 font-semibold">
+                {getPaymentMethodInfo(paymentMethod).icon} {getPaymentMethodInfo(paymentMethod).label}
+              </span>
+            </div>
           </div>
 
           {/* Price breakdown according to BR-012 */}
@@ -605,6 +619,52 @@ export function ServiceRequestWizard() {
               </div>
             </div>
           ) : null}
+
+          {/* HU-12: payment method selector */}
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+              Medio de pago
+            </legend>
+            <div className="grid grid-cols-3 gap-2">
+              {PAYMENT_METHODS.map((method) => {
+                const selected = paymentMethod === method.value;
+                return (
+                  <label
+                    key={method.value}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 cursor-pointer text-center transition ${
+                      selected
+                        ? "border-blue-600 bg-blue-50 text-blue-900"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value={method.value}
+                      checked={selected}
+                      onChange={() => setPaymentMethod(method.value)}
+                      disabled={isSubmitting}
+                      className="sr-only"
+                    />
+                    <span className="text-xl" aria-hidden>{method.icon}</span>
+                    <span className="text-xs font-bold">{method.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <div
+              className={`p-3 rounded-xl border text-xs space-y-1 ${
+                getPaymentMethodInfo(paymentMethod).isDigital
+                  ? "bg-indigo-50 border-indigo-100 text-indigo-900"
+                  : "bg-gray-50 border-gray-200 text-gray-700"
+              }`}
+            >
+              <p className="font-semibold">{getPaymentMethodInfo(paymentMethod).description}</p>
+              {getPaymentMethodInfo(paymentMethod).instructions.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          </fieldset>
 
           {submitError && (
             <div className="p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl">

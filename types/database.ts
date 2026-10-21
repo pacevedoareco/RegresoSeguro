@@ -10,6 +10,8 @@ export type ServiceStatus =
   | "in_progress"
   | "completed"
   | "cancelled";
+export type PaymentMethod = "mercado_pago" | "transfer" | "cash";
+export type PaymentStatus = "pending" | "paid";
 
 // Convenience row types (mirrors DB schema from DATA_MODEL.md)
 export interface Profile {
@@ -77,6 +79,12 @@ export interface Service {
   assigned_at: string | null;
   completed_at: string | null;
   cancelled_at: string | null;
+  payment_method: PaymentMethod;
+  payment_status: PaymentStatus;
+  paid_at: string | null;
+  commission_rate_at_time: number | null;
+  commission_amount: number | null;
+  driver_net_amount: number | null;
 }
 
 export interface ServiceStatusLog {
@@ -102,6 +110,7 @@ export interface Rating {
 export interface PricingConfig {
   id: number;
   price_per_km: number;
+  commission_rate: number;
   updated_by: string;
   updated_at: string;
 }

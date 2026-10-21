@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatPrice } from "@/lib/pricing/pricing";
 import { RatingModal } from "@/components/RatingModal";
+import { getPaymentMethodInfo, getPaymentStatusLabel } from "@/lib/payments/payments";
 import type { Service, Vehicle, Profile } from "@/types/database";
 
 interface RiderStatusTrackerProps {
@@ -28,6 +29,15 @@ export function RiderStatusTracker({
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [ratingDismissed, setRatingDismissed] = useState(false);
+
+  // HU-12: simulated digital payment
+  const [paying, setPaying] = useState(false);
+  const [paidLocally, setPaidLocally] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const paymentInfo = getPaymentMethodInfo(service.payment_method);
+  const isPaid = paidLocally || service.payment_status === "paid";
+  const canPayDigitally =
+    paymentInfo.isDigital && !isPaid && service.final_price != null && service.status !== "cancelled";
 
   const isCancelled = service.status === "cancelled";
   const isCompleted = service.status === "completed";
@@ -61,6 +71,24 @@ export function RiderStatusTracker({
     } catch {
       setErrorMsg("Error de conexión al intentar cancelar.");
       setCancelling(false);
+    }
+  };
+
+  const handleSimulatePayment = async () => {
+    setPaying(true);
+    setPaymentError(null);
+    try {
+      const res = await fetch(`/api/services/${service.id}/payment`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok && data.code !== "ALREADY_PAID") {
+        setPaymentError(data.message || "No se pudo registrar el pago.");
+        return;
+      }
+      setPaidLocally(true);
+    } catch {
+      setPaymentError("Error de conexión al registrar el pago.");
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -242,7 +270,59 @@ export function RiderStatusTracker({
             {formatPrice(service.final_price ?? service.estimated_price ?? 0)}
           </span>
         </div>
+        <div className="flex justify-between items-center gap-2 pt-2 border-t border-gray-200/60">
+          <span className="text-gray-500">{paymentInfo.icon} Medio de pago:</span>
+          <span className="flex items-center gap-1.5">
+            <span className="font-bold text-gray-800">{paymentInfo.label}</span>
+            {!isCancelled && (
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                  isPaid ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {getPaymentStatusLabel(isPaid ? "paid" : "pending")}
+              </span>
+            )}
+          </span>
+        </div>
       </div>
+
+      {/* HU-12: payment instructions / simulated confirmation */}
+      {!isCancelled && !isPaid && (
+        <div
+          className={`p-4 rounded-2xl border text-xs space-y-2 ${
+            paymentInfo.isDigital
+              ? "bg-indigo-50 border-indigo-100 text-indigo-900"
+              : "bg-gray-50 border-gray-200 text-gray-700"
+          }`}
+        >
+          {paymentInfo.isDigital && service.final_price == null ? (
+            <p>Vas a poder confirmar el pago cuando se asigne el chofer y se fije la tarifa final.</p>
+          ) : (
+            paymentInfo.instructions.map((line) => <p key={line}>{line}</p>)
+          )}
+          {canPayDigitally && (
+            <button
+              type="button"
+              onClick={handleSimulatePayment}
+              disabled={paying}
+              className="w-full mt-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition"
+            >
+              {paying
+                ? "Procesando..."
+                : service.payment_method === "mercado_pago"
+                ? `Simular pago con Mercado Pago (${formatPrice(service.final_price ?? 0)})`
+                : "Ya transferí (simular confirmación)"}
+            </button>
+          )}
+          {paymentError && <p className="text-red-600">{paymentError}</p>}
+        </div>
+      )}
+      {!isCancelled && isPaid && paymentInfo.isDigital && (
+        <div className="p-3 rounded-2xl border border-emerald-200 bg-emerald-50 text-xs text-emerald-800 font-semibold text-center">
+          ✓ Pago confirmado (simulado)
+        </div>
+      )}
 
       {/* Cancellation CTA button */}
       {canCancel && (

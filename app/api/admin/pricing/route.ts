@@ -47,7 +47,7 @@ export async function GET() {
   return NextResponse.json({ pricing }, { status: 200 });
 }
 
-// PUT /api/admin/pricing - Update per-km rate (Super-Admin only per BR-028 / FR-024)
+// PUT /api/admin/pricing - Update per-km rate and commission (Super-Admin only per BR-028 / FR-024)
 export async function PUT(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -98,11 +98,28 @@ export async function PUT(request: NextRequest) {
     );
   }
 
+  // HU-35: optional operational commission (fraction 0 ≤ rate < 1)
+  const rawCommission = (body as any)?.commission_rate;
+  let commissionRate: number | undefined;
+  if (rawCommission !== undefined) {
+    commissionRate = Number(rawCommission);
+    if (isNaN(commissionRate) || commissionRate < 0 || commissionRate >= 1) {
+      return NextResponse.json(
+        {
+          code: "VALIDATION_ERROR",
+          message: "La comisión operativa debe estar entre 0% y 99,9%.",
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   const serviceClient = await createServiceClient();
   const { data: updatedPricing, error: updateError } = await (serviceClient as any)
     .from("pricing_config")
     .update({
       price_per_km: pricePerKm,
+      ...(commissionRate !== undefined && { commission_rate: commissionRate }),
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })

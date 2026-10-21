@@ -116,7 +116,7 @@ La hipótesis del problema se validó en cuatro etapas: encuestas cuantitativas 
 
 **Fuera del alcance inicial**
 - Asignación automática y optimización de conductores (matching, rutas, distribución dinámica).
-- Pagos y facturación integrados (Mercado Pago, Stripe, etc. — el cobro es manual/en efectivo en el MVP).
+- Pagos integrados con pasarela real (Mercado Pago, Stripe, etc.). En el MVP el pasajero elige el medio de pago y el pago digital es **simulado**; el conductor ve su liquidación neta de comisión (PD-026).
 - Penalización monetaria por strikes (prevista para cuando se integren pagos, post-MVP).
 - Geolocalización del conductor visible en el mapa para el pasajero.
 - Personalización avanzada: fidelización, promociones, múltiples tipos de servicio.

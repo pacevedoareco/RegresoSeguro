@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 interface PricingConfig {
   id: number;
   price_per_km: number;
+  commission_rate: number;
   updated_at: string;
 }
 
@@ -16,6 +17,7 @@ export default function PricingAdminPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [pricing, setPricing] = useState<PricingConfig | null>(null);
   const [newRate, setNewRate] = useState<string>("");
+  const [newCommission, setNewCommission] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
@@ -26,6 +28,7 @@ export default function PricingAdminPage() {
         const data = await res.json();
         setPricing(data.pricing);
         setNewRate(data.pricing.price_per_km.toString());
+        setNewCommission((Math.round(Number(data.pricing.commission_rate ?? 0.2) * 1000) / 10).toString());
       }
     } catch (err) {
       console.error("Error loading pricing config:", err);
@@ -75,6 +78,15 @@ export default function PricingAdminPage() {
       return;
     }
 
+    const commissionPct = Number(newCommission);
+    if (isNaN(commissionPct) || commissionPct < 0 || commissionPct >= 100) {
+      setMessage({
+        text: "La comisión operativa debe estar entre 0% y 99,9%.",
+        type: "error",
+      });
+      return;
+    }
+
     setSaving(true);
     setMessage(null);
 
@@ -82,7 +94,10 @@ export default function PricingAdminPage() {
       const res = await fetch("/api/admin/pricing", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ price_per_km: rateNum }),
+        body: JSON.stringify({
+          price_per_km: rateNum,
+          commission_rate: Math.round(commissionPct * 10) / 1000,
+        }),
       });
 
       const data = await res.json();
@@ -191,6 +206,34 @@ export default function PricingAdminPage() {
               {pricing?.updated_at
                 ? new Date(pricing.updated_at).toLocaleString("es-AR")
                 : "Sin registro"}
+            </p>
+          </div>
+
+          {/* HU-35: operational commission deducted from each driver settlement */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              Comisión operativa (%)
+            </label>
+            <div className="relative max-w-xs">
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                max="99.9"
+                required
+                disabled={!isSuperAdmin || saving}
+                value={newCommission}
+                onChange={(e) => setNewCommission(e.target.value)}
+                className="w-full pl-4 pr-8 py-2.5 text-sm font-bold text-gray-900 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-hidden disabled:bg-gray-50 disabled:text-gray-500"
+                placeholder="20"
+              />
+              <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 font-bold text-sm">
+                %
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1.5">
+              Se descuenta de la tarifa final al completarse cada servicio; el neto se acredita al conductor.
+              Los servicios ya liquidados conservan la comisión vigente al momento de finalizar.
             </p>
           </div>
 

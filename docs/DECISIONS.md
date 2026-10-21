@@ -37,6 +37,7 @@ It is organized by category. All decisions are traceable to their source.
 | PD-023 | Operator-initiated cancellation from Assigned → no strike; apology to rider; pre-fill re-request | OQ-004 | 2026-09-25 | Accepted |
 | PD-024 | Price display format: $1.500,00 (es-AR locale via Intl.NumberFormat) | OQ-005 | 2026-09-25 | Accepted |
 | PD-025 | No rating on cancelled services; rating only on Completed | OQ-006 | 2026-09-25 | Accepted |
+| PD-026 | Rider picks a payment method at request time (Mercado Pago, transfer, cash). Digital payments are **simulated** (no real gateway) for the academic MVP; cash is marked paid on completion. Driver settlement = final_price − operational commission (`pricing_config.commission_rate`, default 20%, Super-Admin editable), frozen per service at completion. Refines PD-004 | HU-12 (SCRUM-16), HU-35 (SCRUM-39) | 2026-10-20 | Accepted |
 
 ---
 

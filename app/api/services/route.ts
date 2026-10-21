@@ -7,6 +7,7 @@ import {
   calculateThreeLegDistances,
   haversineDistanceKm,
 } from "@/lib/services/routing";
+import { PAYMENT_METHOD_VALUES } from "@/lib/payments/payments";
 
 const createServiceSchema = z.object({
   vehicle_id: z.string().uuid("Vehículo inválido"),
@@ -18,6 +19,10 @@ const createServiceSchema = z.object({
     .min(1, "La dirección de destino es obligatoria"),
   destination_lat: z.number().min(-90).max(90),
   destination_lng: z.number().min(-180).max(180),
+  // HU-12: payment method chosen at request time (PD-026)
+  payment_method: z
+    .enum(PAYMENT_METHOD_VALUES, { errorMap: () => ({ message: "Medio de pago inválido" }) })
+    .default("cash"),
 });
 
 export async function GET(request: NextRequest) {
@@ -163,6 +168,7 @@ export async function POST(request: NextRequest) {
     destination_address,
     destination_lat,
     destination_lng,
+    payment_method,
   } = parsed.data;
 
   // 3. Verify vehicle belongs to user
@@ -260,6 +266,7 @@ export async function POST(request: NextRequest) {
       estimated_ride_km: breakdown.rideKm,
       estimated_return_km: breakdown.returnKm,
       price_per_km_at_time: pricePerKm,
+      payment_method,
     })
     .select()
     .single();

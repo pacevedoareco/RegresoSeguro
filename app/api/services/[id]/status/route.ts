@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { isValidTransition } from "@/lib/services/transitions";
 import { ServiceStatus } from "@/types/database";
 import { getStatusNotificationContent, sendPushToUser } from "@/lib/push/push";
+import { calculateSettlement, DEFAULT_COMMISSION_RATE } from "@/lib/earnings/earnings";
 
 const updateStatusSchema = z.object({
   status: z.enum([
@@ -102,9 +103,10 @@ export async function PATCH(
 
   const userRole = profile?.role ?? "rider";
 
-  // If driver is changing status, must be the assigned driver
-  if (userRole === "driver") {
-    if (service.driver_id !== user.id) {
+  // Only the assigned driver or admin staff may drive status transitions
+  const isStaff = userRole === "operator" || userRole === "super_admin";
+  if (!isStaff) {
+    if (userRole !== "driver" || service.driver_id !== user.id) {
       return NextResponse.json(
         {
           code: "FORBIDDEN",
@@ -121,7 +123,30 @@ export async function PATCH(
   };
 
   if (newStatus === "completed") {
-    updateData.completed_at = new Date().toISOString();
+    const completedAt = new Date().toISOString();
+    updateData.completed_at = completedAt;
+
+    // HU-35: settle the service — commission is frozen at completion (PD-026)
+    const { data: pricing } = await (serviceClient as any)
+      .from("pricing_config")
+      .select("commission_rate")
+      .eq("id", 1)
+      .maybeSingle();
+
+    const commissionRate = Number(pricing?.commission_rate ?? DEFAULT_COMMISSION_RATE);
+    const settlement = calculateSettlement(
+      Number(service.final_price ?? service.estimated_price ?? 0),
+      commissionRate
+    );
+    updateData.commission_rate_at_time = settlement.commissionRate;
+    updateData.commission_amount = settlement.commissionAmount;
+    updateData.driver_net_amount = settlement.netAmount;
+
+    // Cash is collected by the driver at drop-off
+    if (service.payment_method === "cash" && service.payment_status !== "paid") {
+      updateData.payment_status = "paid";
+      updateData.paid_at = completedAt;
+    }
   }
 
   const { data: updatedService, error: updateError } = await (serviceClient as any)

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/pricing/pricing";
+import { getPaymentMethodLabel, getPaymentStatusLabel } from "@/lib/payments/payments";
 import type { Service, Vehicle, Profile, DriverProfile } from "@/types/database";
 
 type EnrichedDriver = DriverProfile & {
@@ -988,6 +989,13 @@ export default function OperatorRequestsPage() {
                       {formatPrice(selectedOngoing.final_price ?? selectedOngoing.estimated_price ?? 0)}
                     </span>
                   </div>
+
+                  <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold text-xs">
+                    <span>Medio de pago:</span>
+                    <span>
+                      {getPaymentMethodLabel(selectedOngoing.payment_method)} ({getPaymentStatusLabel(selectedOngoing.payment_status)})
+                    </span>
+                  </div>
                 </div>
 
                 {/* Cancel Button */}
@@ -1049,6 +1057,26 @@ export default function OperatorRequestsPage() {
                       {formatPrice(selectedCompleted.final_price ?? 0)}
                     </span>
                   </div>
+
+                  <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold text-xs">
+                    <span>Medio de pago:</span>
+                    <span>
+                      {getPaymentMethodLabel(selectedCompleted.payment_method)} ({getPaymentStatusLabel(selectedCompleted.payment_status)})
+                    </span>
+                  </div>
+
+                  {selectedCompleted.driver_net_amount != null && (
+                    <div className="pt-2 border-t border-gray-200/60 space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Comisión ({Math.round(Number(selectedCompleted.commission_rate_at_time ?? 0) * 1000) / 10}%):</span>
+                        <span className="font-semibold">{formatPrice(Number(selectedCompleted.commission_amount ?? 0))}</span>
+                      </div>
+                      <div className="flex justify-between font-bold">
+                        <span>Neto al conductor:</span>
+                        <span>{formatPrice(Number(selectedCompleted.driver_net_amount))}</span>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pt-2 border-t border-gray-200/60 flex justify-between font-bold text-xs">
                     <span>Solicitado:</span>

@@ -61,18 +61,21 @@ export type Database = {
       }
       pricing_config: {
         Row: {
+          commission_rate: number
           id: number
           price_per_km: number
           updated_at: string
           updated_by: string
         }
         Insert: {
+          commission_rate?: number
           id: number
           price_per_km: number
           updated_at?: string
           updated_by: string
         }
         Update: {
+          commission_rate?: number
           id?: number
           price_per_km?: number
           updated_at?: string
@@ -271,11 +274,14 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          commission_amount: number | null
+          commission_rate_at_time: number | null
           completed_at: string | null
           destination_address: string
           destination_lat: number
           destination_lng: number
           driver_id: string | null
+          driver_net_amount: number | null
           estimated_pickup_km: number | null
           estimated_price: number | null
           estimated_return_km: number | null
@@ -285,6 +291,9 @@ export type Database = {
           final_return_km: number | null
           final_ride_km: number | null
           id: string
+          paid_at: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_status: Database["public"]["Enums"]["payment_status"]
           pickup_address: string
           pickup_lat: number
           pickup_lng: number
@@ -299,11 +308,14 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          commission_amount?: number | null
+          commission_rate_at_time?: number | null
           completed_at?: string | null
           destination_address: string
           destination_lat: number
           destination_lng: number
           driver_id?: string | null
+          driver_net_amount?: number | null
           estimated_pickup_km?: number | null
           estimated_price?: number | null
           estimated_return_km?: number | null
@@ -313,6 +325,9 @@ export type Database = {
           final_return_km?: number | null
           final_ride_km?: number | null
           id?: string
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: Database["public"]["Enums"]["payment_status"]
           pickup_address: string
           pickup_lat: number
           pickup_lng: number
@@ -327,11 +342,14 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          commission_amount?: number | null
+          commission_rate_at_time?: number | null
           completed_at?: string | null
           destination_address?: string
           destination_lat?: number
           destination_lng?: number
           driver_id?: string | null
+          driver_net_amount?: number | null
           estimated_pickup_km?: number | null
           estimated_price?: number | null
           estimated_return_km?: number | null
@@ -341,6 +359,9 @@ export type Database = {
           final_return_km?: number | null
           final_ride_km?: number | null
           id?: string
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: Database["public"]["Enums"]["payment_status"]
           pickup_address?: string
           pickup_lat?: number
           pickup_lng?: number
@@ -428,6 +449,8 @@ export type Database = {
     }
     Enums: {
       driver_availability: "online" | "offline"
+      payment_method: "mercado_pago" | "transfer" | "cash"
+      payment_status: "pending" | "paid"
       service_status:
         | "requested"
         | "assigned"
@@ -545,6 +568,8 @@ export const Constants = {
   public: {
     Enums: {
       driver_availability: ["online", "offline"],
+      payment_method: ["mercado_pago", "transfer", "cash"],
+      payment_status: ["pending", "paid"],
       service_status: [
         "requested",
         "assigned",

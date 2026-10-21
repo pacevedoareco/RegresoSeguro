@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getPaymentMethodLabel, getPaymentStatusLabel } from "@/lib/payments/payments";
 
 interface ServiceItem {
   id: string;
@@ -16,6 +17,8 @@ interface ServiceItem {
   final_price: number | null;
   estimated_price: number | null;
   cancellation_reason: string | null;
+  payment_method?: string;
+  payment_status?: string;
   vehicle?: {
     make_model: string;
     license_plate: string;
@@ -282,6 +285,12 @@ export default function TripsHistoryPage() {
                             {(trip.status === "completed" || trip.status === "cancelled") && (
                               <div className="text-[11px] text-gray-500 mt-0.5">
                                 ⏱️ Duración: {formatDuration(getTripDuration(trip.requested_at, trip.status === "completed" ? trip.completed_at : trip.cancelled_at))}
+                              </div>
+                            )}
+                            {trip.payment_method && (
+                              <div className="text-[11px] text-gray-500 mt-0.5">
+                                💳 {getPaymentMethodLabel(trip.payment_method)}
+                                {trip.status !== "cancelled" && ` • ${getPaymentStatusLabel(trip.payment_status)}`}
                               </div>
                             )}
                             {trip.cancellation_reason && (

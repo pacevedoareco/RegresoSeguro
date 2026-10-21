@@ -201,6 +201,26 @@ export default function ProfilePage() {
             </Link>
           )}
 
+          {profile?.role === "driver" && (
+            <Link
+              href="/driver/earnings"
+              className="p-4 flex items-center justify-between hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">💰</span>
+                <div>
+                  <div className="text-xs font-bold text-gray-900">
+                    Mis ganancias
+                  </div>
+                  <div className="text-[11px] text-gray-500">
+                    Billetera y detalle de liquidaciones
+                  </div>
+                </div>
+              </div>
+              <span className="text-gray-400 font-bold text-xs">→</span>
+            </Link>
+          )}
+
           {(profile?.role === "operator" || profile?.role === "super_admin") && (
             <Link
               href="/admin"

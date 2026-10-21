@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { DriverProfile, Service, Vehicle, Profile } from "@/types/database";
 import { JobCard } from "@/components/JobCard";
 import { RatingModal } from "@/components/RatingModal";
+import { formatPrice } from "@/lib/pricing/pricing";
+import type { EarningsSummary } from "@/lib/earnings/earnings";
 
 export default function DriverDashboardPage() {
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function DriverDashboardPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [gpsActive, setGpsActive] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
 
   const watchIdRef = useRef<number | null>(null);
 
@@ -41,10 +44,28 @@ export default function DriverDashboardPage() {
     }
   }, [router]);
 
+  // HU-35: wallet summary
+  const loadEarnings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/driver/earnings");
+      if (res.ok) {
+        const data = await res.json();
+        setEarnings(data.summary);
+      }
+    } catch (err) {
+      console.error("Error loading earnings:", err);
+    }
+  }, []);
+
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  // Refresh balances whenever the active job changes (e.g. after completing one)
+  useEffect(() => {
+    void loadEarnings();
+  }, [activeJob?.id, loadEarnings]);
 
   // 2. Realtime subscription to driver's services
   useEffect(() => {
@@ -299,6 +320,27 @@ export default function DriverDashboardPage() {
             </p>
           </div>
         )}
+
+        {/* HU-35: wallet summary */}
+        <Link
+          href="/driver/earnings"
+          className="block bg-white p-5 rounded-3xl shadow-xs border border-gray-100 hover:border-emerald-200 transition"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider block">
+                💰 Mi billetera
+              </span>
+              <span className="text-2xl font-black text-gray-900 block">
+                {formatPrice(earnings?.total ?? 0)}
+              </span>
+              <span className="text-xs text-gray-500">
+                Hoy: {formatPrice(earnings?.today ?? 0)} • Semana: {formatPrice(earnings?.week ?? 0)}
+              </span>
+            </div>
+            <span className="text-xs font-semibold text-blue-600">Ver detalle →</span>
+          </div>
+        </Link>
 
         {/* Rating Modal for Driver upon Completion (BR-024) */}
         {completedJobForRating && (
