@@ -65,6 +65,8 @@ export default function TripsHistoryPage() {
   }, [router]);
 
   useEffect(() => {
+    // loadTrips only sets state after awaiting the network, so no cascading render
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadTrips();
   }, [loadTrips]);
 

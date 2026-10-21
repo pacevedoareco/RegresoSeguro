@@ -75,3 +75,29 @@
 - `components/`: Componentes UI modulares (mapas, formularios, paneles de estado).
 - `supabase/migrations/`: Esquema de base de datos PostgreSQL y políticas RLS.
 - `docs/`: Documentación de producto, reglas de negocio y arquitectura.
+
+---
+
+## Flujo de PRs y CI/CD
+
+1. Crear una branch desde `main` y abrir un PR contra `main` (se usa la plantilla de `.github/pull_request_template.md`).
+2. **CI (GitHub Actions)** — [`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada PR y en cada push a `main`, con cuatro jobs en paralelo:
+   - **Lint** — `npm run lint`
+   - **Typecheck** — `npm run typecheck`
+   - **Unit tests** — `npm test`
+   - **Build** — `npm run build` (con env vars dummy; no se conecta a servicios reales)
+
+   El job **CI OK** agrupa los cuatro: es el único check que hay que marcar como obligatorio.
+3. **CD (Vercel)** — Vercel genera un *preview deployment* por cada PR y despliega a producción al mergear en `main`.
+4. **Dependabot** abre PRs semanales para actualizar dependencias npm y versiones de actions.
+
+### Protección de la branch `main` (configurar una vez en GitHub)
+
+En *Settings → Branches → Add branch ruleset* (o *Branch protection rule*) para `main`:
+
+- ✅ Require a pull request before merging (opcional: 1 aprobación)
+- ✅ Require status checks to pass → agregar **`CI OK`** (y opcionalmente el check de Vercel)
+- ✅ Require branches to be up to date before merging
+- ✅ Block force pushes
+
+Además, en *Vercel → Project Settings → Git* se puede activar que el deploy a producción espere a que pasen los checks de GitHub.
